@@ -1,0 +1,1802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AIM OS Desktop v1.0.0 — Glassmorphic Tauri Environment</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+        }
+      }
+    }
+  </script>
+  <style>
+    :root {
+      --glass-blur: 24px;
+      --glass-bg: rgba(255, 255, 255, 0.14);
+      --glass-bg-elevated: rgba(255, 255, 255, 0.22);
+      --glass-border: rgba(255, 255, 255, 0.28);
+      --glass-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.45);
+      --text-primary: #ffffff;
+      --text-secondary: rgba(255, 255, 255, 0.72);
+      --text-muted: rgba(255, 255, 255, 0.48);
+      --accent-color: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.35);
+      --panel-inner: rgba(15, 23, 42, 0.36);
+    }
+
+    body.light-glass {
+      --glass-bg: rgba(255, 255, 255, 0.62);
+      --glass-bg-elevated: rgba(255, 255, 255, 0.78);
+      --glass-border: rgba(255, 255, 255, 0.85);
+      --glass-shadow: 0 24px 48px -12px rgba(15, 23, 42, 0.18);
+      --text-primary: #0f172a;
+      --text-secondary: rgba(15, 23, 42, 0.75);
+      --text-muted: rgba(15, 23, 42, 0.5);
+      --panel-inner: rgba(255, 255, 255, 0.55);
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+    }
+
+    input, textarea, pre, code, .selectable {
+      user-select: text;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      font-family: 'Inter', sans-serif;
+      color: var(--text-primary);
+      transition: color 0.3s ease;
+    }
+
+    /* Atmospheric Wallpapers */
+    .wallpaper-aurora {
+      background:
+        radial-gradient(at 15% 20%, rgba(56, 189, 248, 0.55) 0px, transparent 50%),
+        radial-gradient(at 85% 15%, rgba(168, 85, 247, 0.52) 0px, transparent 52%),
+        radial-gradient(at 75% 85%, rgba(236, 72, 153, 0.45) 0px, transparent 50%),
+        radial-gradient(at 20% 80%, rgba(16, 185, 129, 0.42) 0px, transparent 50%),
+        linear-gradient(135deg, #090d16 0%, #111827 50%, #0f172a 100%);
+      background-size: 140% 140%;
+      animation: meshShift 22s ease infinite alternate;
+    }
+
+    .wallpaper-glacier {
+      background:
+        radial-gradient(at 20% 25%, rgba(125, 211, 252, 0.75) 0px, transparent 55%),
+        radial-gradient(at 80% 20%, rgba(196, 181, 253, 0.68) 0px, transparent 55%),
+        radial-gradient(at 60% 85%, rgba(103, 232, 249, 0.65) 0px, transparent 55%),
+        linear-gradient(135deg, #1e293b 0%, #334155 50%, #0f172a 100%);
+      background-size: 140% 140%;
+      animation: meshShift 26s ease infinite alternate;
+    }
+
+    .wallpaper-sunset {
+      background:
+        radial-gradient(at 18% 22%, rgba(251, 146, 60, 0.65) 0px, transparent 52%),
+        radial-gradient(at 82% 28%, rgba(244, 63, 94, 0.6) 0px, transparent 55%),
+        radial-gradient(at 45% 85%, rgba(139, 92, 246, 0.58) 0px, transparent 55%),
+        linear-gradient(135deg, #181024 0%, #27132a 50%, #0f172a 100%);
+      background-size: 140% 140%;
+      animation: meshShift 24s ease infinite alternate;
+    }
+
+    .wallpaper-emerald {
+      background:
+        radial-gradient(at 20% 20%, rgba(52, 211, 153, 0.55) 0px, transparent 50%),
+        radial-gradient(at 85% 30%, rgba(6, 182, 212, 0.5) 0px, transparent 52%),
+        radial-gradient(at 50% 85%, rgba(59, 130, 246, 0.45) 0px, transparent 55%),
+        linear-gradient(135deg, #061314 0%, #0b2226 50%, #09151e 100%);
+      background-size: 140% 140%;
+      animation: meshShift 20s ease infinite alternate;
+    }
+
+    @keyframes meshShift {
+      0% { background-position: 0% 20%; }
+      50% { background-position: 100% 60%; }
+      100% { background-position: 25% 100%; }
+    }
+
+    /* Core Glassmorphism Surfaces */
+    .glass-surface {
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--glass-blur)) saturate(175%);
+      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(175%);
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--glass-shadow);
+    }
+
+    .glass-bar {
+      background: var(--glass-bg-elevated);
+      backdrop-filter: blur(calc(var(--glass-blur) + 6px)) saturate(185%);
+      -webkit-backdrop-filter: blur(calc(var(--glass-blur) + 6px)) saturate(185%);
+      border-bottom: 1px solid var(--glass-border);
+    }
+
+    .glass-dock {
+      background: var(--glass-bg-elevated);
+      backdrop-filter: blur(calc(var(--glass-blur) + 8px)) saturate(190%);
+      -webkit-backdrop-filter: blur(calc(var(--glass-blur) + 8px)) saturate(190%);
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+    }
+
+    .glass-inner {
+      background: var(--panel-inner);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+    }
+
+    .window-frame {
+      transition: opacity 0.2s ease, transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .window-frame.dragging,
+    .window-frame.resizing {
+      transition: none !important;
+    }
+
+    .window-minimized {
+      opacity: 0;
+      transform: scale(0.86) translateY(60px);
+      pointer-events: none;
+    }
+
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.24);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.4);
+    }
+
+    /* Dock Hover Magnification */
+    .dock-item {
+      transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), margin 0.22s ease;
+    }
+    .dock-item:hover {
+      transform: translateY(-10px) scale(1.22);
+      margin-left: 6px;
+      margin-right: 6px;
+    }
+
+    /* Range Slider Styling */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.25);
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #ffffff;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body class="wallpaper-aurora select-none">
+
+  <!-- Brightness Overlay -->
+  <div id="brightness-overlay" class="fixed inset-0 bg-black pointer-events-none z-[9998] transition-opacity duration-150" style="opacity: 0;"></div>
+
+  <!-- Sleep / Lock Screen Overlay -->
+  <div id="sleep-screen" class="fixed inset-0 z-[9999] hidden flex-col items-center justify-center backdrop-blur-3xl bg-slate-950/75 text-white transition-opacity duration-500">
+    <div class="text-center space-y-4">
+      <div id="lock-time" class="text-7xl font-light tracking-tight">18:04</div>
+      <div id="lock-date" class="text-lg text-white/70 font-normal">Friday, November 13</div>
+      <div class="pt-8">
+        <button onclick="wakeSystem()" class="px-6 py-3 rounded-2xl glass-surface hover:bg-white/25 transition flex items-center gap-3 mx-auto text-sm font-medium shadow-lg">
+          <span class="w-2.5 h-2.5 rounded-full bg-sky-400 animate-pulse"></span>
+          Click to Unlock AIM OS
+        </button>
+      </div>
+      <p class="text-xs text-white/40 font-mono pt-4">aim-os-desktop v1.0.0 • tauri v2 runtime suspended</p>
+    </div>
+  </div>
+
+  <!-- Top Status Bar -->
+  <header id="top-bar" class="glass-bar fixed top-0 left-0 right-0 h-9 px-3 sm:px-4 flex items-center justify-between z-[1000] text-xs font-medium">
+    <!-- Left: System Menu + Active Window -->
+    <div class="flex items-center gap-3">
+      <div class="relative">
+        <button id="apple-menu-btn" onclick="toggleMenu('system-menu')" class="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-white/15 transition">
+          <svg class="w-4 h-4 text-sky-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+            <polyline points="2 17 12 22 22 17"></polyline>
+            <polyline points="2 12 12 17 22 12"></polyline>
+          </svg>
+          <span class="font-semibold tracking-tight">AIM OS</span>
+        </button>
+
+        <!-- System Dropdown -->
+        <div id="system-menu" class="hidden absolute left-0 mt-2 w-60 rounded-2xl glass-surface p-1.5 shadow-2xl z-[1100] text-xs">
+          <button onclick="openApp('about'); closeMenus()" class="w-full text-left px-3 py-2 rounded-xl hover:bg-white/15 flex items-center justify-between">
+            <span>About AIM OS Desktop</span>
+            <span class="font-mono text-[10px] opacity-60">v1.0.0</span>
+          </button>
+          <div class="my-1 border-t border-white/15"></div>
+          <button onclick="openApp('settings'); closeMenus()" class="w-full text-left px-3 py-2 rounded-xl hover:bg-white/15">System Preferences...</button>
+          <button onclick="openApp('sysinfo'); closeMenus()" class="w-full text-left px-3 py-2 rounded-xl hover:bg-white/15">Task & Telemetry Monitor</button>
+          <button onclick="openApp('terminal'); closeMenus()" class="w-full text-left px-3 py-2 rounded-xl hover:bg-white/15">Tauri Cargo Shell</button>
+          <div class="my-1 border-t border-white/15"></div>
+          <button onclick="sleepSystem(); closeMenus()" class="w-full text-left px-3 py-2 rounded-xl hover:bg-white/15 flex items-center justify-between">
+            <span>Sleep Runtime</span>
+            <span class="opacity-50">⌥⌘S</span>
+          </button>
+          <button onclick="restartSystem(); closeMenus()" class="w-full text-left px-3 py-2 rounded-xl hover:bg-rose-500/25 text-rose-300 flex items-center justify-between">
+            <span>Restart Session</span>
+            <span class="opacity-50">⌃⌘R</span>
+          </button>
+        </div>
+      </div>
+
+      <span class="opacity-30">|</span>
+      <span id="active-app-label" class="font-semibold truncate max-w-[140px] sm:max-w-[220px]">Finder • Desktop</span>
+      <div class="hidden md:flex items-center gap-3 ml-2 opacity-75">
+        <button onclick="openApp('explorer')" class="hover:opacity-100 transition">File</button>
+        <button onclick="openApp('notes')" class="hover:opacity-100 transition">Edit</button>
+        <button onclick="toggleTheme()" class="hover:opacity-100 transition">View</button>
+        <button onclick="openApp('about')" class="hover:opacity-100 transition">Crate Info</button>
+      </div>
+    </div>
+
+    <!-- Right: Live sysinfo Telemetry + Control Center + Clock -->
+    <div class="flex items-center gap-2 sm:gap-3">
+      <!-- Live sysinfo Pill -->
+      <button onclick="openApp('sysinfo')" title="Live sysinfo::System telemetry" class="hidden sm:flex items-center gap-2.5 px-2.5 py-0.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 transition font-mono text-[11px]">
+        <span class="flex items-center gap-1 text-emerald-300">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          CPU <span id="top-cpu">18%</span>
+        </span>
+        <span class="opacity-30">•</span>
+        <span class="text-sky-300">RAM <span id="top-ram">4.2G</span></span>
+        <span class="hidden lg:inline opacity-30">•</span>
+        <span class="hidden lg:inline text-purple-300">NET <span id="top-net">1.4MB/s</span></span>
+      </button>
+
+      <!-- Control Center Button -->
+      <div class="relative">
+        <button onclick="toggleMenu('control-center')" class="px-2 py-1 rounded-lg hover:bg-white/15 transition flex items-center gap-1.5" title="Control Center">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+          </svg>
+          <span class="hidden md:inline">Control</span>
+        </button>
+
+        <!-- Control Center Popover -->
+        <div id="control-center" class="hidden absolute right-0 mt-2 w-80 rounded-3xl glass-surface p-4 shadow-2xl z-[1100] space-y-3.5">
+          <div class="grid grid-cols-2 gap-2.5">
+            <button id="cc-wifi" onclick="toggleControl('wifi')" class="p-3 rounded-2xl bg-sky-500/30 border border-sky-400/40 flex items-center gap-3 text-left transition">
+              <div class="w-8 h-8 rounded-full bg-sky-400 text-slate-950 flex items-center justify-center shrink-0">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>
+              </div>
+              <div>
+                <div class="text-xs font-semibold">Wi-Fi</div>
+                <div id="cc-wifi-status" class="text-[10px] opacity-75">AIM-Fiber-6E</div>
+              </div>
+            </button>
+
+            <button id="cc-bt" onclick="toggleControl('bt')" class="p-3 rounded-2xl bg-indigo-500/30 border border-indigo-400/40 flex items-center gap-3 text-left transition">
+              <div class="w-8 h-8 rounded-full bg-indigo-400 text-slate-950 flex items-center justify-center shrink-0">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="m7 7 10 10-5 5V2l5 5L7 17"/></svg>
+              </div>
+              <div>
+                <div class="text-xs font-semibold">Bluetooth</div>
+                <div id="cc-bt-status" class="text-[10px] opacity-75">Active</div>
+              </div>
+            </button>
+          </div>
+
+          <!-- Theme & Glass Mode -->
+          <div class="p-3 rounded-2xl glass-inner flex items-center justify-between">
+            <div>
+              <div class="text-xs font-semibold">Frosted Glass Mode</div>
+              <div id="theme-mode-label" class="text-[10px] opacity-70">Dark Obsidian Frost</div>
+            </div>
+            <button onclick="toggleTheme()" class="px-3 py-1.5 rounded-xl bg-white/20 hover:bg-white/30 text-xs font-medium transition">
+              Switch Theme
+            </button>
+          </div>
+
+          <!-- Brightness -->
+          <div class="p-3 rounded-2xl glass-inner space-y-1.5">
+            <div class="flex justify-between text-[11px]">
+              <span class="opacity-80">Display Brightness</span>
+              <span id="brightness-val" class="font-mono">100%</span>
+            </div>
+            <input type="range" min="35" max="100" value="100" oninput="setBrightness(this.value)" class="w-full" />
+          </div>
+
+          <!-- Volume -->
+          <div class="p-3 rounded-2xl glass-inner space-y-1.5">
+            <div class="flex justify-between text-[11px]">
+              <span class="opacity-80">System Audio</span>
+              <span id="volume-val" class="font-mono">76%</span>
+            </div>
+            <input type="range" min="0" max="100" value="76" oninput="document.getElementById('volume-val').textContent = this.value + '%'" class="w-full" />
+          </div>
+
+          <!-- Quick Wallpaper Switcher -->
+          <div class="space-y-1.5">
+            <div class="text-[11px] opacity-75 px-1">Atmospheric Wallpaper</div>
+            <div class="grid grid-cols-4 gap-2">
+              <button onclick="setWallpaper('aurora')" class="h-8 rounded-xl wallpaper-aurora border border-white/40 hover:scale-105 transition" title="Aurora Mesh"></button>
+              <button onclick="setWallpaper('glacier')" class="h-8 rounded-xl wallpaper-glacier border border-white/40 hover:scale-105 transition" title="Nordic Glacier"></button>
+              <button onclick="setWallpaper('sunset')" class="h-8 rounded-xl wallpaper-sunset border border-white/40 hover:scale-105 transition" title="Solar Dusk"></button>
+              <button onclick="setWallpaper('emerald')" class="h-8 rounded-xl wallpaper-emerald border border-white/40 hover:scale-105 transition" title="Emerald Matrix"></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chrono Clock & Calendar Popover -->
+      <div class="relative">
+        <button onclick="toggleMenu('calendar-popover')" id="top-clock" class="px-2 py-1 rounded-lg hover:bg-white/15 transition font-medium tabular-nums">
+          Fri Nov 13 • 6:04 PM
+        </button>
+
+        <div id="calendar-popover" class="hidden absolute right-0 mt-2 w-72 rounded-3xl glass-surface p-4 shadow-2xl z-[1100] space-y-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <div id="cal-month" class="text-sm font-semibold">November 2026</div>
+              <div class="text-[10px] font-mono opacity-65">chrono::Local::now()</div>
+            </div>
+            <span class="px-2 py-0.5 rounded-full bg-sky-400/20 text-sky-300 font-mono text-[10px]">UTC-07:00</span>
+          </div>
+          <div id="calendar-grid" class="grid grid-cols-7 gap-1 text-center text-[11px]"></div>
+          <div class="pt-2 border-t border-white/15 text-[11px] flex items-center justify-between opacity-80">
+            <span>Uptime (sysinfo)</span>
+            <span id="uptime-counter" class="font-mono">00:00:14</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Desktop Area -->
+  <main id="desktop-area" oncontextmenu="showDesktopContextMenu(event)" class="relative w-full h-full pt-12 pb-24 px-4 overflow-hidden">
+
+    <!-- Desktop Shortcuts Grid -->
+    <div id="desktop-icons" class="grid grid-flow-col grid-rows-5 gap-3 w-fit">
+      <button ondblclick="openApp('explorer')" onclick="selectDesktopIcon(this)" class="desktop-icon group w-24 p-2.5 rounded-2xl hover:bg-white/15 focus:bg-white/20 transition flex flex-col items-center gap-1.5 text-center">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center shadow-lg group-hover:scale-105 transition">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+        </div>
+        <span class="text-xs font-medium drop-shadow leading-tight">Projects & FS</span>
+      </button>
+
+      <button ondblclick="openApp('sysinfo')" onclick="selectDesktopIcon(this)" class="desktop-icon group w-24 p-2.5 rounded-2xl hover:bg-white/15 focus:bg-white/20 transition flex flex-col items-center gap-1.5 text-center">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center shadow-lg group-hover:scale-105 transition">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        </div>
+        <span class="text-xs font-medium drop-shadow leading-tight">sysinfo Monitor</span>
+      </button>
+
+      <button ondblclick="openApp('sqlite')" onclick="selectDesktopIcon(this)" class="desktop-icon group w-24 p-2.5 rounded-2xl hover:bg-white/15 focus:bg-white/20 transition flex flex-col items-center gap-1.5 text-center">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center shadow-lg group-hover:scale-105 transition">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        </div>
+        <span class="text-xs font-medium drop-shadow leading-tight">SQLite Studio</span>
+      </button>
+
+      <button ondblclick="openApp('terminal')" onclick="selectDesktopIcon(this)" class="desktop-icon group w-24 p-2.5 rounded-2xl hover:bg-white/15 focus:bg-white/20 transition flex flex-col items-center gap-1.5 text-center">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-slate-700 to-slate-950 border border-white/25 flex items-center justify-center shadow-lg group-hover:scale-105 transition">
+          <svg class="w-6 h-6 text-sky-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+        </div>
+        <span class="text-xs font-medium drop-shadow leading-tight">Cargo Shell</span>
+      </button>
+
+      <button ondblclick="openApp('reqwest')" onclick="selectDesktopIcon(this)" class="desktop-icon group w-24 p-2.5 rounded-2xl hover:bg-white/15 focus:bg-white/20 transition flex flex-col items-center gap-1.5 text-center">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center shadow-lg group-hover:scale-105 transition">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        </div>
+        <span class="text-xs font-medium drop-shadow leading-tight">Reqwest Stream</span>
+      </button>
+    </div>
+
+    <!-- Floating Desktop Crate Badge Widget (Top Right) -->
+    <div class="hidden xl:block absolute top-14 right-6 w-72 rounded-3xl glass-surface p-4 space-y-3 pointer-events-auto">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+          <span class="text-xs font-semibold tracking-wide uppercase opacity-80">aim_os_lib Runtime</span>
+        </div>
+        <span class="text-[11px] font-mono px-2 py-0.5 rounded-full bg-white/15">v1.0.0</span>
+      </div>
+      <p class="text-xs opacity-75 leading-relaxed">
+        Tauri v2 glassmorphic shell powered by <span class="font-mono text-sky-300">tokio</span> async runtime, <span class="font-mono text-amber-300">rusqlite</span>, and <span class="font-mono text-emerald-300">notify</span> watchers.
+      </p>
+      <div class="flex gap-2">
+        <button onclick="openApp('terminal')" class="flex-1 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-xs font-medium transition">Cargo Build</button>
+        <button onclick="openApp('about')" class="flex-1 py-1.5 rounded-xl bg-sky-500/30 hover:bg-sky-500/40 border border-sky-400/30 text-xs font-medium transition">Cargo.toml</button>
+      </div>
+    </div>
+
+    <!-- Windows Container -->
+    <div id="windows-layer" class="absolute inset-0 pointer-events-none"></div>
+
+  </main>
+
+  <!-- Desktop Right-Click Context Menu -->
+  <div id="context-menu" class="hidden fixed w-56 rounded-2xl glass-surface p-1.5 shadow-2xl z-[2000] text-xs">
+    <button onclick="createNewDesktopFolder(); hideContextMenu()" class="w-full text-left px-3 py-2 rounded-xl hover:bg-white/15 flex items-center gap-2.5">
+      <svg class="w-4 h-4 text-sky-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 10v6m3-3H9m10 7H5a2 2 0 01-2-2V6a2 2 0 012-2h6l2 2h6a2 2 0 012 2v10a2 2 0 01-2 2z"/></svg>
+      <span>New Folder (notify)</span>
+    </button>
+    <button onclick="openApp('terminal'); hideContextMenu()" class="w-full text-left px-3 py-2 rounded-xl hover:bg-white/15 flex items-center gap-2.5">
+      <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+      <span>Open Cargo Terminal</span>
+    </button>
+    <button onclick="openApp('sysinfo'); hideContextMenu()" class="w-full text-left px-3 py-2 rounded-xl hover:bg-white/15 flex items-center gap-2.5">
+      <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      <span>System Telemetry</span>
+    </button>
+    <div class="my-1 border-t border-white/15"></div>
+    <button onclick="cycleWallpaper(); hideContextMenu()" class="w-full text-left px-3 py-2 rounded-xl hover:bg-white/15 flex items-center gap-2.5">
+      <svg class="w-4 h-4 text-pink-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+      <span>Next Aurora Wallpaper</span>
+    </button>
+    <button onclick="openApp('settings'); hideContextMenu()" class="w-full text-left px-3 py-2 rounded-xl hover:bg-white/15 flex items-center gap-2.5">
+      <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      <span>Glass Settings</span>
+    </button>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed top-12 right-4 z-[3000] flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Bottom Floating Glass Dock -->
+  <nav aria-label="Application Dock" class="fixed bottom-3 left-1/2 -translate-x-1/2 z-[1500] max-w-[96vw]">
+    <div id="dock-bar" class="glass-dock px-3 py-2 rounded-3xl flex items-end gap-2 sm:gap-3">
+      <!-- Dock buttons injected by JS -->
+    </div>
+  </nav>
+
+  <script>
+    // =========================================================================
+    // 1. SYSTEM STATE & CARGO.TOML METADATA
+    // =========================================================================
+    const CARGO_TOML_TEXT = `[package]
+name = "aim-os-desktop"
+version = "1.0.0"
+edition = "2021"
+
+[lib]
+name = "aim_os_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-opener = "2"
+tauri-plugin-sql = { version = "2", features = ["sqlite"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sysinfo = "0.30"
+reqwest = { version = "0.11", features = ["json", "stream"] }
+tokio = { version = "1", features = ["full"] }
+futures-util = "0.3"
+rusqlite = { version = "0.31", features = ["bundled"] }
+notify = "6.1"
+globset = "0.4"
+chrono = "0.4"`;
+
+    const APPS = [
+      {
+        id: 'sysinfo',
+        name: 'System Monitor',
+        crate: 'sysinfo 0.30',
+        gradient: 'from-emerald-400 to-teal-600',
+        width: 720,
+        height: 490,
+        icon: `<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>`
+      },
+      {
+        id: 'explorer',
+        name: 'File Explorer',
+        crate: 'notify + globset',
+        gradient: 'from-sky-400 to-blue-600',
+        width: 760,
+        height: 500,
+        icon: `<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>`
+      },
+      {
+        id: 'sqlite',
+        name: 'SQLite Studio',
+        crate: 'rusqlite 0.31',
+        gradient: 'from-amber-400 to-orange-600',
+        width: 760,
+        height: 500,
+        icon: `<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>`
+      },
+      {
+        id: 'terminal',
+        name: 'Cargo Terminal',
+        crate: 'tauri v2 + tokio',
+        gradient: 'from-slate-700 to-slate-950',
+        width: 700,
+        height: 460,
+        icon: `<svg class="w-6 h-6 text-sky-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>`
+      },
+      {
+        id: 'reqwest',
+        name: 'API & Stream',
+        crate: 'reqwest + serde_json',
+        gradient: 'from-purple-500 to-pink-600',
+        width: 740,
+        height: 490,
+        icon: `<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>`
+      },
+      {
+        id: 'notes',
+        name: 'Scratchpad',
+        crate: 'serde + chrono',
+        gradient: 'from-yellow-400 to-amber-500',
+        width: 620,
+        height: 450,
+        icon: `<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`
+      },
+      {
+        id: 'settings',
+        name: 'Glass Settings',
+        crate: 'tauri-plugin-opener',
+        gradient: 'from-cyan-500 to-indigo-600',
+        width: 640,
+        height: 470,
+        icon: `<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>`
+      }
+    ];
+
+    // Virtual File System for File Explorer (`notify` + `globset`)
+    const virtualFS = [
+      { path: 'Projects/aim-os-desktop/Cargo.toml', folder: 'Projects', name: 'Cargo.toml', size: '512 B', modified: '2026-11-13 18:01', content: CARGO_TOML_TEXT },
+      { path: 'Projects/aim-os-desktop/src/lib.rs', folder: 'Projects', name: 'lib.rs', size: '3.4 KB', modified: '2026-11-13 17:58', content: `use sysinfo::System;\nuse rusqlite::Connection;\nuse notify::{Watcher, RecursiveMode};\n\n#[tauri::command]\npub fn get_system_metrics() -> serde_json::Value {\n    let mut sys = System::new_all();\n    sys.refresh_all();\n    serde_json::json!({ "status": "ok", "version": "1.0.0" })\n}` },
+      { path: 'Projects/aim-os-desktop/src/main.rs', folder: 'Projects', name: 'main.rs', size: '420 B', modified: '2026-11-13 17:40', content: `#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]\n\nfn main() {\n    aim_os_lib::run();\n}` },
+      { path: 'Projects/aim-os-desktop/tauri.conf.json', folder: 'Projects', name: 'tauri.conf.json', size: '1.8 KB', modified: '2026-11-13 16:22', content: `{\n  "productName": "aim-os-desktop",\n  "version": "1.0.0",\n  "app": {\n    "windows": [{ "title": "AIM OS Desktop", "transparent": true }]\n  }\n}` },
+      { path: 'Documents/architecture-notes.md', folder: 'Documents', name: 'architecture-notes.md', size: '2.1 KB', modified: '2026-11-13 15:10', content: `# AIM OS Glass Architecture\n- Frosted backdrop blur layers\n- Async tokio channel streams\n- Bundled SQLite persistence` },
+      { path: 'Documents/tauri-v2-migration.txt', folder: 'Documents', name: 'tauri-v2-migration.txt', size: '1.1 KB', modified: '2026-11-12 20:14', content: `Upgraded tauri-plugin-opener and tauri-plugin-sql to v2.0.0.` },
+      { path: 'System/aim_os_store.sqlite', folder: 'System', name: 'aim_os_store.sqlite', size: '48.0 KB', modified: '2026-11-13 18:04', content: `[Binary SQLite 3 Database — Open in SQLite Studio]` },
+      { path: 'System/watcher-rules.json', folder: 'System', name: 'watcher-rules.json', size: '640 B', modified: '2026-11-13 12:05', content: `{\n  "globset_includes": ["*.rs", "*.toml", "**/*.json"],\n  "debounce_ms": 150\n}` },
+      { path: 'Media/aurora-mesh-4k.svg', folder: 'Media', name: 'aurora-mesh-4k.svg', size: '14.2 KB', modified: '2026-11-10 09:30', content: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080"><!-- Aurora Shader --></svg>` }
+    ];
+
+    const notifyEvents = [
+      { time: '18:04:01', kind: 'Modify(Data)', path: 'System/aim_os_store.sqlite' },
+      { time: '18:02:44', kind: 'Create(File)', path: 'Projects/aim-os-desktop/Cargo.toml' },
+      { time: '17:58:19', kind: 'Modify(Data)', path: 'Projects/aim-os-desktop/src/lib.rs' },
+      { time: '17:45:02', kind: 'Access(Close)', path: 'System/watcher-rules.json' }
+    ];
+
+    // SQLite Studio Database (`rusqlite` / `tauri-plugin-sql`)
+    const sqliteDB = {
+      users: [
+        { id: 1, username: 'aim_admin', role: 'root_operator', created_at: '2026-11-01T09:00:00Z' },
+        { id: 2, username: 'rust_builder', role: 'crate_maintainer', created_at: '2026-11-05T14:22:10Z' },
+        { id: 3, username: 'tokio_worker', role: 'async_executor', created_at: '2026-11-12T19:45:00Z' }
+      ],
+      system_logs: [
+        { id: 101, level: 'INFO', crate: 'tauri', message: 'Initialized glassmorphic window manager v1.0.0' },
+        { id: 102, level: 'INFO', crate: 'rusqlite', message: 'Opened bundled SQLite pool with WAL mode' },
+        { id: 103, level: 'DEBUG', crate: 'notify', message: 'Watching 4 workspace directories recursively' },
+        { id: 104, level: 'INFO', crate: 'sysinfo', message: 'Polling 8 logical CPU cores @ 500ms interval' }
+      ],
+      app_configs: [
+        { key: 'glass.blur_px', value: '24', updated_by: 'aim_admin' },
+        { key: 'theme.variant', value: 'dark_obsidian_frost', updated_by: 'aim_admin' },
+        { key: 'globset.default_filter', value: '*.rs', updated_by: 'rust_builder' }
+      ]
+    };
+
+    // Telemetry state (`sysinfo`)
+    const telemetry = {
+      cpuHistory: Array.from({ length: 32 }, () => Math.floor(14 + Math.random() * 18)),
+      cores: [22, 14, 31, 18, 9, 27, 15, 19],
+      ramUsedGB: 4.2,
+      ramTotalGB: 16.0,
+      netDown: 1.4,
+      netUp: 0.42,
+      uptimeSeconds: 14
+    };
+
+    let scratchpadContent = `# AIM OS Desktop — Developer Scratchpad
+Serialized via serde_json & timestamped with chrono::Local.
+
+## Active Tauri v2 Dependencies
+- **tauri v2** + **tauri-plugin-opener**: Native shell & external URI handling
+- **tauri-plugin-sql** + **rusqlite (bundled)**: Zero-config embedded SQLite
+- **sysinfo 0.30**: Real-time host CPU, RAM, and process telemetry
+- **tokio (full)** + **reqwest (stream)** + **futures-util**: Async HTTP chunk streaming
+- **notify 6.1** + **globset 0.4**: Reactive file system events & glob filtering
+
+Try opening **Cargo Terminal** and running \`cargo build\` or \`neofetch\`!`;
+
+    // Window Management State
+    let openWindows = {};
+    let zIndexCounter = 100;
+    let activeAppId = null;
+    let currentWallpaper = 'aurora';
+    let isLightGlass = false;
+    let currentExplorerFolder = 'All';
+    let currentExplorerGlob = '*';
+    let selectedFile = virtualFS[0];
+    let currentSqlTable = 'users';
+
+    // =========================================================================
+    // 2. INITIALIZATION & CLOCK / TELEMETRY LOOPS
+    // =========================================================================
+    window.addEventListener('DOMContentLoaded', () => {
+      renderDock();
+      renderCalendar();
+      updateClock();
+      startTelemetryLoop();
+
+      // Open System Monitor & Cargo Terminal slightly staggered for an inviting initial workspace
+      setTimeout(() => openApp('sysinfo'), 120);
+      setTimeout(() => {
+        openApp('terminal');
+        const termWin = document.getElementById('win-terminal');
+        if (termWin && window.innerWidth > 900) {
+          termWin.style.left = '260px';
+          termWin.style.top = '110px';
+        }
+      }, 280);
+    });
+
+    function showToast(title, subtitle, accent = 'sky') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'glass-surface px-4 py-3 rounded-2xl shadow-xl flex items-start gap-3 w-72 transition-all duration-300 transform translate-x-4 opacity-0 pointer-events-auto';
+      const dotColor = accent === 'emerald' ? 'bg-emerald-400' : accent === 'amber' ? 'bg-amber-400' : 'bg-sky-400';
+      toast.innerHTML = `
+        <span class="w-2.5 h-2.5 rounded-full ${dotColor} mt-1 shrink-0"></span>
+        <div class="text-xs">
+          <div class="font-semibold">${title}</div>
+          <div class="opacity-75 mt-0.5">${subtitle}</div>
+        </div>
+      `;
+      container.appendChild(toast);
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-x-4', 'opacity-0');
+      });
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-x-4');
+        setTimeout(() => toast.remove(), 300);
+      }, 3200);
+    }
+
+    function updateClock() {
+      const now = new Date();
+      const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const dayName = days[now.getDay()];
+      const monthName = months[now.getMonth()];
+      const dateNum = now.getDate();
+
+      let hours = now.getHours();
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      const hours12 = hours % 12 || 12;
+
+      document.getElementById('top-clock').textContent = `${dayName} ${monthName} ${dateNum} • ${hours12}:${minutes} ${ampm}`;
+      document.getElementById('lock-time').textContent = `${String(hours).padStart(2, '0')}:${minutes}`;
+      document.getElementById('lock-date').textContent = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+    }
+    setInterval(updateClock, 1000);
+
+    function renderCalendar() {
+      const now = new Date();
+      const grid = document.getElementById('calendar-grid');
+      const headers = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+      let html = headers.map(h => `<div class="opacity-50 font-semibold py-1">${h}</div>`).join('');
+      const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).getDay();
+      const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+      for (let i = 0; i < firstDay; i++) html += `<div></div>`;
+      for (let d = 1; d <= daysInMonth; d++) {
+        const isToday = d === now.getDate();
+        html += `<div class="py-1 rounded-lg ${isToday ? 'bg-sky-400 text-slate-950 font-bold' : 'hover:bg-white/15'}">${d}</div>`;
+      }
+      grid.innerHTML = html;
+    }
+
+    function startTelemetryLoop() {
+      setInterval(() => {
+        telemetry.uptimeSeconds++;
+        const hrs = String(Math.floor(telemetry.uptimeSeconds / 3600)).padStart(2, '0');
+        const mins = String(Math.floor((telemetry.uptimeSeconds % 3600) / 60)).padStart(2, '0');
+        const secs = String(telemetry.uptimeSeconds % 60).padStart(2, '0');
+        const uptimeEl = document.getElementById('uptime-counter');
+        if (uptimeEl) uptimeEl.textContent = `${hrs}:${mins}:${secs}`;
+
+        // Update CPU cores & average
+        telemetry.cores = telemetry.cores.map(c => {
+          const delta = Math.floor(Math.random() * 13) - 6;
+          return Math.max(4, Math.min(94, c + delta));
+        });
+        const avgCpu = Math.round(telemetry.cores.reduce((a, b) => a + b, 0) / telemetry.cores.length);
+        telemetry.cpuHistory.push(avgCpu);
+        telemetry.cpuHistory.shift();
+
+        telemetry.ramUsedGB = +(Math.max(3.8, Math.min(11.4, telemetry.ramUsedGB + (Math.random() * 0.16 - 0.08)))).toFixed(1);
+        telemetry.netDown = +(Math.max(0.2, Math.random() * 4.8)).toFixed(1);
+        telemetry.netUp = +(Math.max(0.1, Math.random() * 1.4)).toFixed(2);
+
+        document.getElementById('top-cpu').textContent = `${avgCpu}%`;
+        document.getElementById('top-ram').textContent = `${telemetry.ramUsedGB}G`;
+        document.getElementById('top-net').textContent = `${telemetry.netDown}MB/s`;
+
+        if (openWindows['sysinfo'] && !openWindows['sysinfo'].minimized) {
+          updateSysinfoWindowUI(avgCpu);
+        }
+      }, 1000);
+    }
+
+    // =========================================================================
+    // 3. DOCK & WINDOW MANAGER
+    // =========================================================================
+    function renderDock() {
+      const dock = document.getElementById('dock-bar');
+      dock.innerHTML = APPS.map(app => {
+        const isOpen = Boolean(openWindows[app.id]);
+        return `
+          <button onclick="handleDockClick('${app.id}')" title="${app.name} (${app.crate})" class="dock-item relative group flex flex-col items-center">
+            <span class="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-9 px-2.5 py-1 rounded-xl glass-surface text-[11px] font-medium whitespace-nowrap pointer-events-none shadow-lg">
+              ${app.name}
+            </span>
+            <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br ${app.gradient} flex items-center justify-center shadow-lg border border-white/25">
+              ${app.icon}
+            </div>
+            <span class="w-1.5 h-1.5 rounded-full mt-1 transition-all ${isOpen ? 'bg-white opacity-100' : 'opacity-0'}"></span>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function handleDockClick(appId) {
+      const winState = openWindows[appId];
+      if (!winState) {
+        openApp(appId);
+      } else if (winState.minimized) {
+        restoreWindow(appId);
+      } else if (activeAppId === appId) {
+        minimizeWindow(appId);
+      } else {
+        focusWindow(appId);
+      }
+    }
+
+    function openApp(appId) {
+      if (appId === 'about') {
+        openAboutWindow();
+        return;
+      }
+      const app = APPS.find(a => a.id === appId);
+      if (!app) return;
+
+      if (openWindows[appId]) {
+        restoreWindow(appId);
+        focusWindow(appId);
+        return;
+      }
+
+      const layer = document.getElementById('windows-layer');
+      const offsetCount = Object.keys(openWindows).length;
+      const isMobile = window.innerWidth < 768;
+      const w = isMobile ? Math.min(window.innerWidth - 24, app.width) : Math.min(window.innerWidth - 60, app.width);
+      const h = isMobile ? Math.min(window.innerHeight - 130, app.height) : Math.min(window.innerHeight - 135, app.height);
+      const left = isMobile ? 12 : Math.max(40, Math.min(window.innerWidth - w - 40, 110 + offsetCount * 34));
+      const top = isMobile ? 48 : Math.max(48, Math.min(window.innerHeight - h - 95, 64 + offsetCount * 28));
+
+      const winEl = document.createElement('div');
+      winEl.id = `win-${appId}`;
+      winEl.className = 'window-frame glass-surface rounded-3xl flex flex-col overflow-hidden pointer-events-auto absolute';
+      winEl.style.width = `${w}px`;
+      winEl.style.height = `${h}px`;
+      winEl.style.left = `${left}px`;
+      winEl.style.top = `${top}px`;
+      winEl.style.zIndex = ++zIndexCounter;
+
+      winEl.addEventListener('mousedown', () => focusWindow(appId));
+
+      winEl.innerHTML = `
+        <!-- Window Titlebar -->
+        <div class="win-header h-11 px-4 flex items-center justify-between border-b border-white/15 bg-white/5 cursor-grab active:cursor-grabbing shrink-0">
+          <div class="flex items-center gap-2">
+            <button onclick="closeWindow('${appId}')" title="Close" class="w-3.5 h-3.5 rounded-full bg-rose-500 hover:bg-rose-400 flex items-center justify-center text-[9px] text-rose-950 font-bold transition">✕</button>
+            <button onclick="minimizeWindow('${appId}')" title="Minimize" class="w-3.5 h-3.5 rounded-full bg-amber-400 hover:bg-amber-300 flex items-center justify-center text-[9px] text-amber-950 font-bold transition">−</button>
+            <button onclick="toggleMaximizeWindow('${appId}')" title="Maximize" class="w-3.5 h-3.5 rounded-full bg-emerald-400 hover:bg-emerald-300 flex items-center justify-center text-[9px] text-emerald-950 font-bold transition">+</button>
+          </div>
+          <div class="flex items-center gap-2 text-xs font-semibold tracking-tight truncate px-2">
+            <span>${app.name}</span>
+            <span class="hidden sm:inline font-mono text-[10px] px-2 py-0.5 rounded-full bg-white/10 opacity-75">${app.crate}</span>
+          </div>
+          <div class="w-12"></div>
+        </div>
+
+        <!-- Window Body -->
+        <div id="win-body-${appId}" class="flex-1 overflow-auto p-4 text-xs">
+          ${renderAppContent(appId)}
+        </div>
+
+        <!-- Resize Handle -->
+        <div class="win-resizer absolute bottom-0 right-0 w-5 h-5 cursor-nwse-resize flex items-end justify-end p-1 opacity-40 hover:opacity-90">
+          <svg class="w-3 h-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 3L3 11M11 7L7 11"/></svg>
+        </div>
+      `;
+
+      layer.appendChild(winEl);
+      openWindows[appId] = { id: appId, minimized: false, maximized: false, prevRect: null };
+      makeWindowDraggableAndResizable(winEl, appId);
+      focusWindow(appId);
+      renderDock();
+      postRenderAppHook(appId);
+    }
+
+    function openAboutWindow() {
+      const appId = 'about';
+      if (openWindows[appId]) {
+        restoreWindow(appId);
+        focusWindow(appId);
+        return;
+      }
+      const layer = document.getElementById('windows-layer');
+      const w = Math.min(540, window.innerWidth - 32);
+      const h = Math.min(460, window.innerHeight - 130);
+      const winEl = document.createElement('div');
+      winEl.id = `win-${appId}`;
+      winEl.className = 'window-frame glass-surface rounded-3xl flex flex-col overflow-hidden pointer-events-auto absolute';
+      winEl.style.width = `${w}px`;
+      winEl.style.height = `${h}px`;
+      winEl.style.left = `${Math.max(16, (window.innerWidth - w) / 2)}px`;
+      winEl.style.top = `${Math.max(54, (window.innerHeight - h) / 2 - 20)}px`;
+      winEl.style.zIndex = ++zIndexCounter;
+      winEl.addEventListener('mousedown', () => focusWindow(appId));
+
+      winEl.innerHTML = `
+        <div class="win-header h-11 px-4 flex items-center justify-between border-b border-white/15 bg-white/5 cursor-grab shrink-0">
+          <div class="flex items-center gap-2">
+            <button onclick="closeWindow('about')" class="w-3.5 h-3.5 rounded-full bg-rose-500 hover:bg-rose-400"></button>
+            <button onclick="minimizeWindow('about')" class="w-3.5 h-3.5 rounded-full bg-amber-400 hover:bg-amber-300"></button>
+          </div>
+          <span class="text-xs font-semibold">About AIM OS Desktop</span>
+          <div class="w-8"></div>
+        </div>
+        <div class="flex-1 overflow-auto p-5 space-y-4 text-xs">
+          <div class="flex items-center gap-4">
+            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-sky-400 via-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shrink-0">
+              <svg class="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                <polyline points="2 17 12 22 22 17"></polyline>
+                <polyline points="2 12 12 17 22 12"></polyline>
+              </svg>
+            </div>
+            <div>
+              <h2 class="text-lg font-bold tracking-tight">AIM OS Desktop <span class="text-sky-400 font-mono text-sm">v1.0.0</span></h2>
+              <p class="opacity-75">Edition 2021 • Crate Library: <code class="font-mono text-sky-300">aim_os_lib</code></p>
+            </div>
+          </div>
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-semibold opacity-85">Cargo.toml Manifest</span>
+              <button onclick="copyCargoToml()" class="px-2.5 py-1 rounded-lg bg-white/15 hover:bg-white/25 text-[11px] transition">Copy Cargo.toml</button>
+            </div>
+            <pre class="p-3 rounded-2xl glass-inner font-mono text-[11px] leading-relaxed overflow-x-auto selectable">${CARGO_TOML_TEXT}</pre>
+          </div>
+        </div>
+      `;
+      layer.appendChild(winEl);
+      openWindows[appId] = { id: appId, minimized: false, maximized: false };
+      makeWindowDraggableAndResizable(winEl, appId);
+      focusWindow(appId);
+    }
+
+    function copyCargoToml() {
+      const ta = document.createElement('textarea');
+      ta.value = CARGO_TOML_TEXT;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
+      showToast('Copied to Clipboard', 'Cargo.toml manifest copied.', 'emerald');
+    }
+
+    function focusWindow(appId) {
+      const winEl = document.getElementById(`win-${appId}`);
+      if (!winEl) return;
+      winEl.style.zIndex = ++zIndexCounter;
+      activeAppId = appId;
+      const app = APPS.find(a => a.id === appId);
+      document.getElementById('active-app-label').textContent = app ? `${app.name} • ${app.crate}` : 'About AIM OS';
+    }
+
+    function closeWindow(appId) {
+      const winEl = document.getElementById(`win-${appId}`);
+      if (winEl) winEl.remove();
+      delete openWindows[appId];
+      if (activeAppId === appId) {
+        activeAppId = null;
+        document.getElementById('active-app-label').textContent = 'Finder • Desktop';
+      }
+      renderDock();
+    }
+
+    function minimizeWindow(appId) {
+      const winEl = document.getElementById(`win-${appId}`);
+      if (!winEl || !openWindows[appId]) return;
+      winEl.classList.add('window-minimized');
+      openWindows[appId].minimized = true;
+      if (activeAppId === appId) {
+        document.getElementById('active-app-label').textContent = 'Finder • Desktop';
+      }
+    }
+
+    function restoreWindow(appId) {
+      const winEl = document.getElementById(`win-${appId}`);
+      if (!winEl || !openWindows[appId]) return;
+      winEl.classList.remove('window-minimized');
+      openWindows[appId].minimized = false;
+      focusWindow(appId);
+    }
+
+    function toggleMaximizeWindow(appId) {
+      const winEl = document.getElementById(`win-${appId}`);
+      const state = openWindows[appId];
+      if (!winEl || !state) return;
+
+      if (!state.maximized) {
+        state.prevRect = {
+          left: winEl.style.left,
+          top: winEl.style.top,
+          width: winEl.style.width,
+          height: winEl.style.height
+        };
+        winEl.style.left = '12px';
+        winEl.style.top = '44px';
+        winEl.style.width = `${window.innerWidth - 24}px`;
+        winEl.style.height = `${window.innerHeight - 126}px`;
+        state.maximized = true;
+      } else if (state.prevRect) {
+        winEl.style.left = state.prevRect.left;
+        winEl.style.top = state.prevRect.top;
+        winEl.style.width = state.prevRect.width;
+        winEl.style.height = state.prevRect.height;
+        state.maximized = false;
+      }
+    }
+
+    function makeWindowDraggableAndResizable(winEl, appId) {
+      const header = winEl.querySelector('.win-header');
+      const resizer = winEl.querySelector('.win-resizer');
+
+      // Dragging (Mouse + Touch)
+      const startDrag = (clientX, clientY) => {
+        if (openWindows[appId]?.maximized) return;
+        winEl.classList.add('dragging');
+        const startLeft = winEl.offsetLeft;
+        const startTop = winEl.offsetTop;
+
+        const onMove = (moveX, moveY) => {
+          const newLeft = Math.max(-100, Math.min(window.innerWidth - 120, startLeft + (moveX - clientX)));
+          const newTop = Math.max(36, Math.min(window.innerHeight - 90, startTop + (moveY - clientY)));
+          winEl.style.left = `${newLeft}px`;
+          winEl.style.top = `${newTop}px`;
+        };
+
+        const mouseMove = e => onMove(e.clientX, e.clientY);
+        const touchMove = e => onMove(e.touches[0].clientX, e.touches[0].clientY);
+
+        const stopDrag = () => {
+          winEl.classList.remove('dragging');
+          window.removeEventListener('mousemove', mouseMove);
+          window.removeEventListener('mouseup', stopDrag);
+          window.removeEventListener('touchmove', touchMove);
+          window.removeEventListener('touchend', stopDrag);
+        };
+
+        window.addEventListener('mousemove', mouseMove);
+        window.addEventListener('mouseup', stopDrag);
+        window.addEventListener('touchmove', touchMove, { passive: true });
+        window.addEventListener('touchend', stopDrag);
+      };
+
+      header.addEventListener('mousedown', e => {
+        if (e.target.tagName === 'BUTTON') return;
+        startDrag(e.clientX, e.clientY);
+      });
+      header.addEventListener('touchstart', e => {
+        if (e.target.tagName === 'BUTTON') return;
+        startDrag(e.touches[0].clientX, e.touches[0].clientY);
+      }, { passive: true });
+
+      // Resizing
+      if (resizer) {
+        resizer.addEventListener('mousedown', e => {
+          e.stopPropagation();
+          winEl.classList.add('resizing');
+          const startX = e.clientX;
+          const startY = e.clientY;
+          const startW = winEl.offsetWidth;
+          const startH = winEl.offsetHeight;
+
+          const onResize = ev => {
+            winEl.style.width = `${Math.max(340, startW + (ev.clientX - startX))}px`;
+            winEl.style.height = `${Math.max(280, startH + (ev.clientY - startY))}px`;
+          };
+          const stopResize = () => {
+            winEl.classList.remove('resizing');
+            window.removeEventListener('mousemove', onResize);
+            window.removeEventListener('mouseup', stopResize);
+          };
+          window.addEventListener('mousemove', onResize);
+          window.addEventListener('mouseup', stopResize);
+        });
+      }
+    }
+
+    // =========================================================================
+    // 4. APPLICATION CONTENT RENDERERS
+    // =========================================================================
+    function renderAppContent(appId) {
+      switch (appId) {
+        case 'sysinfo': return renderSysinfoApp();
+        case 'explorer': return renderExplorerApp();
+        case 'sqlite': return renderSqliteApp();
+        case 'terminal': return renderTerminalApp();
+        case 'reqwest': return renderReqwestApp();
+        case 'notes': return renderNotesApp();
+        case 'settings': return renderSettingsApp();
+        default: return '';
+      }
+    }
+
+    function postRenderAppHook(appId) {
+      if (appId === 'terminal') {
+        const input = document.getElementById('terminal-input');
+        if (input) input.focus();
+      }
+    }
+
+    // --- APP 1: SYSTEM MONITOR (`sysinfo 0.30`) ---
+    function renderSysinfoApp() {
+      const avgCpu = Math.round(telemetry.cpuHistory[telemetry.cpuHistory.length - 1]);
+      return `
+        <div class="space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div class="p-3.5 rounded-2xl glass-inner space-y-1">
+              <div class="flex justify-between items-center opacity-75">
+                <span>CPU Utilization</span>
+                <span class="font-mono text-[10px] text-emerald-300">sysinfo::Cpu</span>
+              </div>
+              <div id="sys-cpu-big" class="text-2xl font-bold text-emerald-300 font-mono">${avgCpu}%</div>
+              <div class="text-[11px] opacity-65">8 Logical Cores • Apple/ARM64</div>
+            </div>
+
+            <div class="p-3.5 rounded-2xl glass-inner space-y-1">
+              <div class="flex justify-between items-center opacity-75">
+                <span>Memory Allocated</span>
+                <span class="font-mono text-[10px] text-sky-300">used_memory()</span>
+              </div>
+              <div id="sys-ram-big" class="text-2xl font-bold text-sky-300 font-mono">${telemetry.ramUsedGB} / 16.0 GB</div>
+              <div class="w-full h-1.5 rounded-full bg-white/15 overflow-hidden mt-1">
+                <div id="sys-ram-bar" class="h-full bg-sky-400 transition-all duration-500" style="width: ${(telemetry.ramUsedGB / 16) * 100}%"></div>
+              </div>
+            </div>
+
+            <div class="p-3.5 rounded-2xl glass-inner space-y-1">
+              <div class="flex justify-between items-center opacity-75">
+                <span>Network Throughput</span>
+                <span class="font-mono text-[10px] text-purple-300">Networks</span>
+              </div>
+              <div id="sys-net-big" class="text-2xl font-bold text-purple-300 font-mono">↓ ${telemetry.netDown} MB/s</div>
+              <div id="sys-net-up" class="text-[11px] opacity-65">↑ ${telemetry.netUp} MB/s • tokio-io</div>
+            </div>
+          </div>
+
+          <!-- Real-Time CPU Sparkline Chart -->
+          <div class="p-4 rounded-2xl glass-inner space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="font-semibold">Real-Time CPU Load History</span>
+              <span class="font-mono text-[10px] opacity-65">Refresh: 1000ms</span>
+            </div>
+            <div id="sys-cpu-bars" class="h-24 flex items-end gap-1 pt-2">
+              ${telemetry.cpuHistory.map(val => `
+                <div class="flex-1 bg-gradient-to-t from-emerald-500/40 to-emerald-300 rounded-t transition-all duration-300" style="height: ${val}%"></div>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- Per-Core Breakdown & Processes -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div class="p-3.5 rounded-2xl glass-inner space-y-2">
+              <div class="font-semibold">Logical Core Telemetry</div>
+              <div id="sys-cores-grid" class="grid grid-cols-2 gap-2">
+                ${telemetry.cores.map((c, idx) => `
+                  <div class="space-y-1">
+                    <div class="flex justify-between text-[11px] font-mono">
+                      <span>Core #${idx}</span>
+                      <span>${c}%</span>
+                    </div>
+                    <div class="h-1.5 rounded-full bg-white/15 overflow-hidden">
+                      <div class="h-full bg-emerald-400 transition-all duration-300" style="width: ${c}%"></div>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+
+            <div class="p-3.5 rounded-2xl glass-inner space-y-2">
+              <div class="font-semibold">Active Tauri / Rust Processes</div>
+              <div class="space-y-1.5 font-mono text-[11px]">
+                <div class="flex justify-between p-1.5 rounded-lg bg-white/5">
+                  <span class="text-sky-300">aim-os-desktop</span>
+                  <span>PID 1024 • 142 MB</span>
+                </div>
+                <div class="flex justify-between p-1.5 rounded-lg bg-white/5">
+                  <span class="text-emerald-300">tokio-rt-worker</span>
+                  <span>PID 1029 • 64 MB</span>
+                </div>
+                <div class="flex justify-between p-1.5 rounded-lg bg-white/5">
+                  <span class="text-amber-300">rusqlite-wal-sync</span>
+                  <span>PID 1041 • 28 MB</span>
+                </div>
+                <div class="flex justify-between p-1.5 rounded-lg bg-white/5">
+                  <span class="text-purple-300">notify-fsevents</span>
+                  <span>PID 1055 • 19 MB</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function updateSysinfoWindowUI(avgCpu) {
+      const cpuBig = document.getElementById('sys-cpu-big');
+      if (!cpuBig) return;
+      cpuBig.textContent = `${avgCpu}%`;
+      document.getElementById('sys-ram-big').textContent = `${telemetry.ramUsedGB} / 16.0 GB`;
+      document.getElementById('sys-ram-bar').style.width = `${(telemetry.ramUsedGB / 16) * 100}%`;
+      document.getElementById('sys-net-big').textContent = `↓ ${telemetry.netDown} MB/s`;
+      document.getElementById('sys-net-up').textContent = `↑ ${telemetry.netUp} MB/s • tokio-io`;
+
+      document.getElementById('sys-cpu-bars').innerHTML = telemetry.cpuHistory.map(val => `
+        <div class="flex-1 bg-gradient-to-t from-emerald-500/40 to-emerald-300 rounded-t transition-all duration-300" style="height: ${val}%"></div>
+      `).join('');
+
+      document.getElementById('sys-cores-grid').innerHTML = telemetry.cores.map((c, idx) => `
+        <div class="space-y-1">
+          <div class="flex justify-between text-[11px] font-mono">
+            <span>Core #${idx}</span>
+            <span>${c}%</span>
+          </div>
+          <div class="h-1.5 rounded-full bg-white/15 overflow-hidden">
+            <div class="h-full bg-emerald-400 transition-all duration-300" style="width: ${c}%"></div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // --- APP 2: FILE EXPLORER (`notify 6.1` & `globset 0.4`) ---
+    function globToRegex(glob) {
+      if (!glob || glob.trim() === '' || glob.trim() === '*') return /.*/i;
+      const escaped = glob.trim()
+        .replace(/[.+^${}()|[\]\\]/g, '\\$&')
+        .replace(/\*\*/g, '.*')
+        .replace(/\*/g, '[^/]*')
+        .replace(/\?/g, '.');
+      return new RegExp(escaped, 'i');
+    }
+
+    function renderExplorerApp() {
+      const folders = ['All', 'Projects', 'Documents', 'System', 'Media'];
+      const regex = globToRegex(currentExplorerGlob);
+      const filteredFiles = virtualFS.filter(f => {
+        const folderMatch = currentExplorerFolder === 'All' || f.folder === currentExplorerFolder;
+        const globMatch = regex.test(f.path) || regex.test(f.name);
+        return folderMatch && globMatch;
+      });
+
+      return `
+        <div class="h-full flex flex-col gap-3">
+          <!-- Toolbar with globset search & notify trigger -->
+          <div class="flex flex-wrap items-center gap-2">
+            <div class="flex-1 min-w-[200px] flex items-center gap-2 px-3 py-1.5 rounded-xl glass-inner">
+              <span class="font-mono text-[10px] text-sky-300 shrink-0">globset::Glob</span>
+              <input id="glob-search-input" type="text" value="${currentExplorerGlob}" oninput="updateExplorerGlob(this.value)" placeholder="e.g. *.rs, *.toml, **/*.json" class="bg-transparent border-none outline-none w-full font-mono text-xs" />
+            </div>
+            <div class="flex gap-1.5">
+              <button onclick="updateExplorerGlob('*.rs')" class="px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 font-mono text-[11px]">*.rs</button>
+              <button onclick="updateExplorerGlob('*.toml')" class="px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 font-mono text-[11px]">*.toml</button>
+              <button onclick="updateExplorerGlob('*')" class="px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 font-mono text-[11px]">Reset</button>
+              <button onclick="simulateNotifyFileCreate()" class="px-3 py-1.5 rounded-xl bg-sky-500/30 hover:bg-sky-500/45 border border-sky-400/40 font-medium text-xs transition">+ New File</button>
+            </div>
+          </div>
+
+          <!-- Split View: Folders + File List + Preview/Watcher -->
+          <div class="flex-1 grid grid-cols-1 md:grid-cols-12 gap-3 min-h-0">
+            <!-- Sidebar Folders -->
+            <div class="md:col-span-3 p-2.5 rounded-2xl glass-inner space-y-1">
+              <div class="text-[10px] uppercase tracking-wider opacity-60 px-2 pb-1">Locations</div>
+              ${folders.map(fld => `
+                <button onclick="setExplorerFolder('${fld}')" class="w-full text-left px-2.5 py-1.5 rounded-xl flex items-center justify-between transition ${currentExplorerFolder === fld ? 'bg-sky-500/35 border border-sky-400/40 font-semibold' : 'hover:bg-white/10'}">
+                  <span>${fld}</span>
+                  <span class="text-[10px] opacity-60">${fld === 'All' ? virtualFS.length : virtualFS.filter(x => x.folder === fld).length}</span>
+                </button>
+              `).join('')}
+            </div>
+
+            <!-- File Table -->
+            <div class="md:col-span-5 p-2.5 rounded-2xl glass-inner overflow-y-auto space-y-1">
+              <div class="text-[10px] uppercase tracking-wider opacity-60 px-2 pb-1">Matched Files (${filteredFiles.length})</div>
+              ${filteredFiles.length === 0 ? `<div class="p-4 text-center opacity-60">No files match glob pattern.</div>` : filteredFiles.map(file => `
+                <button onclick="selectExplorerFile('${file.path}')" class="w-full text-left p-2 rounded-xl flex items-center justify-between transition ${selectedFile?.path === file.path ? 'bg-white/20 border border-white/25' : 'hover:bg-white/10'}">
+                  <div class="truncate pr-2">
+                    <div class="font-medium truncate">${file.name}</div>
+                    <div class="text-[10px] opacity-60 font-mono truncate">${file.path}</div>
+                  </div>
+                  <span class="text-[10px] font-mono opacity-70 shrink-0">${file.size}</span>
+                </button>
+              `).join('')}
+            </div>
+
+            <!-- File Inspector & notify::RecommendedWatcher Log -->
+            <div class="md:col-span-4 flex flex-col gap-2.5 min-h-0">
+              <div class="flex-1 p-3 rounded-2xl glass-inner flex flex-col min-h-0">
+                <div class="text-[10px] font-mono opacity-70 pb-1.5 border-b border-white/10 truncate">${selectedFile ? selectedFile.path : 'No file selected'}</div>
+                <pre class="flex-1 overflow-auto pt-2 font-mono text-[11px] leading-relaxed opacity-90 selectable">${selectedFile ? selectedFile.content : ''}</pre>
+              </div>
+              <div class="h-32 p-2.5 rounded-2xl glass-inner overflow-y-auto space-y-1">
+                <div class="flex items-center justify-between text-[10px] font-mono text-emerald-300">
+                  <span>notify::Event Stream</span>
+                  <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                </div>
+                ${notifyEvents.map(ev => `
+                  <div class="text-[10px] font-mono leading-tight border-l-2 border-emerald-400/60 pl-2 py-0.5">
+                    <span class="opacity-50">${ev.time}</span> <span class="text-sky-300">${ev.kind}</span>
+                    <div class="truncate opacity-80">${ev.path}</div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function setExplorerFolder(folder) {
+      currentExplorerFolder = folder;
+      document.getElementById('win-body-explorer').innerHTML = renderExplorerApp();
+    }
+
+    function updateExplorerGlob(val) {
+      currentExplorerGlob = val;
+      const body = document.getElementById('win-body-explorer');
+      if (body) {
+        body.innerHTML = renderExplorerApp();
+        const inp = document.getElementById('glob-search-input');
+        if (inp) {
+          inp.focus();
+          inp.setSelectionRange(val.length, val.length);
+        }
+      }
+    }
+
+    function selectExplorerFile(path) {
+      selectedFile = virtualFS.find(f => f.path === path) || virtualFS[0];
+      document.getElementById('win-body-explorer').innerHTML = renderExplorerApp();
+    }
+
+    function simulateNotifyFileCreate() {
+      const id = Math.floor(100 + Math.random() * 900);
+      const newPath = `Projects/aim-os-desktop/src/module_${id}.rs`;
+      const nowStr = new Date().toTimeString().split(' ')[0];
+      const newFile = {
+        path: newPath,
+        folder: 'Projects',
+        name: `module_${id}.rs`,
+        size: '310 B',
+        modified: `2026-11-13 ${nowStr.slice(0, 5)}`,
+        content: `// Auto-generated Rust module\npub async fn task_${id}() -> Result<(), reqwest::Error> {\n    Ok(())\n}`
+      };
+      virtualFS.unshift(newFile);
+      selectedFile = newFile;
+      notifyEvents.unshift({ time: nowStr, kind: 'Create(File)', path: newPath });
+      const body = document.getElementById('win-body-explorer');
+      if (body) body.innerHTML = renderExplorerApp();
+      showToast('notify::EventKind::Create', newPath, 'emerald');
+    }
+
+    // --- APP 3: SQLITE STUDIO (`rusqlite 0.31` / `tauri-plugin-sql`) ---
+    function renderSqliteApp() {
+      const tables = Object.keys(sqliteDB);
+      const rows = sqliteDB[currentSqlTable] || [];
+      const columns = rows.length > 0 ? Object.keys(rows[0]) : [];
+
+      return `
+        <div class="h-full flex flex-col gap-3">
+          <!-- Top Bar -->
+          <div class="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-2xl glass-inner">
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded-lg bg-amber-400/20 text-amber-300 font-mono text-[11px]">sqlite:aim_os_store.db</span>
+              <span class="opacity-70 text-[11px]">rusqlite::Connection (bundled)</span>
+            </div>
+            <div class="flex gap-1.5">
+              ${tables.map(t => `
+                <button onclick="switchSqlTable('${t}')" class="px-3 py-1 rounded-xl font-mono text-[11px] transition ${currentSqlTable === t ? 'bg-amber-400/30 border border-amber-300/50 font-semibold' : 'bg-white/10 hover:bg-white/20'}">
+                  ${t}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- SQL Query Bar -->
+          <div class="flex gap-2">
+            <input id="sql-query-input" type="text" value="SELECT * FROM ${currentSqlTable} LIMIT 50;" class="flex-1 px-3 py-2 rounded-xl glass-inner font-mono text-xs outline-none" />
+            <button onclick="executeSimulatedSql()" class="px-4 py-2 rounded-xl bg-amber-500/35 hover:bg-amber-500/50 border border-amber-400/40 font-semibold transition">Run Query</button>
+            <button onclick="insertSampleSqlRow()" class="px-3 py-2 rounded-xl bg-emerald-500/30 hover:bg-emerald-500/45 border border-emerald-400/40 font-medium transition">+ Insert Row</button>
+          </div>
+
+          <!-- Results Table -->
+          <div class="flex-1 rounded-2xl glass-inner overflow-auto">
+            <table class="w-full text-left border-collapse font-mono text-[11px]">
+              <thead>
+                <tr class="border-b border-white/15 bg-white/5">
+                  ${columns.map(col => `<th class="p-2.5 font-semibold text-amber-200">${col}</th>`).join('')}
+                </tr>
+              </thead>
+              <tbody>
+                ${rows.map(row => `
+                  <tr class="border-b border-white/10 hover:bg-white/10 transition">
+                    ${columns.map(col => `<td class="p-2.5">${row[col]}</td>`).join('')}
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function switchSqlTable(tableName) {
+      currentSqlTable = tableName;
+      document.getElementById('win-body-sqlite').innerHTML = renderSqliteApp();
+    }
+
+    function executeSimulatedSql() {
+      const q = document.getElementById('sql-query-input').value.trim();
+      const lower = q.toLowerCase();
+      if (lower.includes('system_logs')) currentSqlTable = 'system_logs';
+      else if (lower.includes('app_configs')) currentSqlTable = 'app_configs';
+      else if (lower.includes('users')) currentSqlTable = 'users';
+
+      document.getElementById('win-body-sqlite').innerHTML = renderSqliteApp();
+      document.getElementById('sql-query-input').value = q;
+      showToast('rusqlite Query Executed', `Returned ${sqliteDB[currentSqlTable].length} rows in 0.4ms`, 'amber');
+    }
+
+    function insertSampleSqlRow() {
+      const nowIso = new Date().toISOString();
+      if (currentSqlTable === 'users') {
+        const nextId = sqliteDB.users.length + 1;
+        sqliteDB.users.push({ id: nextId, username: `guest_dev_${nextId}`, role: 'sandbox_user', created_at: nowIso });
+      } else if (currentSqlTable === 'system_logs') {
+        const nextId = 101 + sqliteDB.system_logs.length;
+        sqliteDB.system_logs.push({ id: nextId, level: 'INFO', crate: 'tauri-plugin-sql', message: 'Committed transaction via rusqlite' });
+      } else {
+        sqliteDB.app_configs.push({ key: `custom.flag_${sqliteDB.app_configs.length + 1}`, value: 'true', updated_by: 'aim_admin' });
+      }
+      document.getElementById('win-body-sqlite').innerHTML = renderSqliteApp();
+      showToast('SQLite Row Inserted', `INSERT INTO ${currentSqlTable} committed.`, 'emerald');
+    }
+
+    // --- APP 4: CARGO TERMINAL (`tauri v2` + `tokio`) ---
+    function renderTerminalApp() {
+      return `
+        <div class="h-full flex flex-col rounded-2xl bg-slate-950/75 border border-white/15 p-3 font-mono text-xs text-slate-100">
+          <div id="terminal-output" class="flex-1 overflow-y-auto space-y-1.5 leading-relaxed selectable">
+            <div class="text-sky-400 font-semibold">AIM OS Desktop Shell v1.0.0 — Tauri v2 + Tokio Async Runtime</div>
+            <div class="text-slate-400">Type <span class="text-emerald-300">help</span>, <span class="text-emerald-300">cargo build</span>, <span class="text-emerald-300">neofetch</span>, <span class="text-emerald-300">sysinfo</span>, or <span class="text-emerald-300">cat Cargo.toml</span>.</div>
+          </div>
+          <form onsubmit="handleTerminalSubmit(event)" class="pt-2 mt-2 border-t border-white/10 flex items-center gap-2">
+            <span class="text-emerald-400 font-semibold">aim@desktop:~/aim-os-desktop$</span>
+            <input id="terminal-input" type="text" autocomplete="off" spellcheck="false" placeholder="Enter command..." class="flex-1 bg-transparent border-none outline-none text-white font-mono text-xs" />
+          </form>
+        </div>
+      `;
+    }
+
+    function appendTermLine(html) {
+      const out = document.getElementById('terminal-output');
+      if (!out) return;
+      const div = document.createElement('div');
+      div.innerHTML = html;
+      out.appendChild(div);
+      out.scrollTop = out.scrollHeight;
+    }
+
+    function handleTerminalSubmit(e) {
+      e.preventDefault();
+      const input = document.getElementById('terminal-input');
+      const raw = input.value.trim();
+      if (!raw) return;
+      input.value = '';
+
+      appendTermLine(`<span class="text-emerald-400">aim@desktop:~/aim-os-desktop$</span> <span class="text-white">${raw}</span>`);
+      const cmd = raw.toLowerCase();
+
+      if (cmd === 'clear') {
+        document.getElementById('terminal-output').innerHTML = '';
+        return;
+      }
+
+      if (cmd === 'help') {
+        appendTermLine(`<div class="text-slate-300 py-1">Available commands:<br/>
+          • <span class="text-sky-300">cargo check</span> — Verify aim_os_lib crate dependencies<br/>
+          • <span class="text-sky-300">cargo build</span> — Compile tauri v2 & bundled rusqlite target<br/>
+          • <span class="text-sky-300">neofetch</span> — Display AIM OS system & crate summary<br/>
+          • <span class="text-sky-300">sysinfo</span> — Print live CPU & RAM metrics<br/>
+          • <span class="text-sky-300">ls</span> — List workspace files<br/>
+          • <span class="text-sky-300">cat Cargo.toml</span> — Inspect manifest<br/>
+          • <span class="text-sky-300">clear</span> — Clear terminal buffer</div>`);
+      } else if (cmd === 'ls') {
+        appendTermLine(`<span class="text-sky-300">Cargo.toml</span>  <span class="text-sky-300">tauri.conf.json</span>  <span class="text-emerald-300">src/</span>  <span class="text-amber-300">aim_os_store.sqlite</span>`);
+      } else if (cmd === 'cat cargo.toml') {
+        appendTermLine(`<pre class="text-slate-300 text-[11px] bg-white/5 p-2 rounded-xl my-1">${CARGO_TOML_TEXT}</pre>`);
+      } else if (cmd === 'sysinfo') {
+        const avgCpu = telemetry.cpuHistory[telemetry.cpuHistory.length - 1];
+        appendTermLine(`<span class="text-emerald-300">[sysinfo 0.30]</span> CPU Load: ${avgCpu}% | RAM: ${telemetry.ramUsedGB} GB / 16.0 GB | Uptime: ${telemetry.uptimeSeconds}s`);
+      } else if (cmd === 'neofetch') {
+        appendTermLine(`<div class="p-2 rounded-xl bg-white/5 my-1 text-[11px] leading-snug">
+          <span class="text-sky-400 font-bold">aim@aim-os-desktop</span><br/>
+          -----------------------<br/>
+          <span class="text-sky-300">OS:</span> AIM OS Desktop v1.0.0 (Glassmorphic Shell)<br/>
+          <span class="text-sky-300">Crate:</span> aim_os_lib (staticlib, cdylib, rlib)<br/>
+          <span class="text-sky-300">Runtime:</span> tauri v2 + tokio 1.0 (full)<br/>
+          <span class="text-sky-300">Database:</span> rusqlite 0.31 (bundled) + tauri-plugin-sql<br/>
+          <span class="text-sky-300">Telemetry:</span> sysinfo 0.30 + chrono 0.4<br/>
+          <span class="text-sky-300">Watchers:</span> notify 6.1 + globset 0.4
+        </div>`);
+      } else if (cmd === 'cargo check' || cmd === 'cargo build') {
+        const steps = [
+          `<span class="text-emerald-400 font-semibold">   Compiling</span> serde v1.0.214`,
+          `<span class="text-emerald-400 font-semibold">   Compiling</span> tokio v1.41.0 (full)`,
+          `<span class="text-emerald-400 font-semibold">   Compiling</span> rusqlite v0.31.0 (bundled)`,
+          `<span class="text-emerald-400 font-semibold">   Compiling</span> reqwest v0.11.27 (json, stream)`,
+          `<span class="text-emerald-400 font-semibold">   Compiling</span> sysinfo v0.30.13`,
+          `<span class="text-emerald-400 font-semibold">   Compiling</span> notify v6.1.1 & globset v0.4.15`,
+          `<span class="text-emerald-400 font-semibold">   Compiling</span> aim-os-desktop v1.0.0 (/Users/aim/aim-os-desktop)`,
+          `<span class="text-sky-400 font-semibold">    Finished</span> \`dev\` profile [unoptimized + debuginfo] target(s) in 1.42s`
+        ];
+        steps.forEach((step, idx) => {
+          setTimeout(() => appendTermLine(step), idx * 180);
+        });
+      } else {
+        appendTermLine(`<span class="text-rose-400">zsh: command not found:</span> ${raw} (try <span class="text-sky-300">help</span>)`);
+      }
+    }
+
+    // --- APP 5: API & STREAM CLIENT (`reqwest 0.11` + `futures-util` + `serde_json`) ---
+    function renderReqwestApp() {
+      return `
+        <div class="h-full flex flex-col gap-3">
+          <div class="flex flex-wrap gap-2">
+            <select id="reqwest-method" class="px-3 py-2 rounded-xl glass-inner font-mono text-xs font-semibold text-emerald-300 outline-none">
+              <option value="GET">GET</option>
+              <option value="STREAM">STREAM</option>
+              <option value="POST">POST</option>
+            </select>
+            <input id="reqwest-url" type="text" value="https://api.aim-os.local/v1/telemetry/stream" class="flex-1 min-w-[200px] px-3 py-2 rounded-xl glass-inner font-mono text-xs outline-none" />
+            <button onclick="sendReqwestCall()" class="px-4 py-2 rounded-xl bg-purple-500/40 hover:bg-purple-500/55 border border-purple-400/40 font-semibold transition">Send Async</button>
+          </div>
+
+          <!-- Preset Endpoints -->
+          <div class="flex flex-wrap items-center gap-1.5 text-[11px]">
+            <span class="opacity-65">Presets:</span>
+            <button onclick="setReqwestPreset('GET', 'https://api.aim-os.local/v1/sysinfo/snapshot')" class="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 font-mono">/sysinfo/snapshot</button>
+            <button onclick="setReqwestPreset('STREAM', 'https://api.aim-os.local/v1/tokio/chunks')" class="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 font-mono">/tokio/chunks (stream)</button>
+            <button onclick="setReqwestPreset('GET', 'https://api.aim-os.local/v1/crates/manifest')" class="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 font-mono">/crates/manifest</button>
+          </div>
+
+          <!-- Status Metrics -->
+          <div class="flex items-center justify-between px-3 py-2 rounded-xl glass-inner font-mono text-[11px]">
+            <span id="reqwest-status" class="text-emerald-300">Status: 200 OK (serde_json)</span>
+            <span id="reqwest-latency" class="opacity-75">Latency: 14ms • futures_util::StreamExt</span>
+          </div>
+
+          <!-- JSON Output -->
+          <pre id="reqwest-body" class="flex-1 p-3.5 rounded-2xl glass-inner font-mono text-[11px] leading-relaxed overflow-auto text-sky-200 selectable">{
+  "crate": "aim_os_lib",
+  "version": "1.0.0",
+  "client": "reqwest 0.11 (json, stream)",
+  "tokio_runtime": "multi_thread",
+  "payload": {
+    "status": "ready",
+    "message": "Click Send Async or select a stream preset"
+  }
+}</pre>
+        </div>
+      `;
+    }
+
+    function setReqwestPreset(method, url) {
+      document.getElementById('reqwest-method').value = method;
+      document.getElementById('reqwest-url').value = url;
+      sendReqwestCall();
+    }
+
+    function sendReqwestCall() {
+      const method = document.getElementById('reqwest-method').value;
+      const url = document.getElementById('reqwest-url').value;
+      const bodyEl = document.getElementById('reqwest-body');
+      const statusEl = document.getElementById('reqwest-status');
+      const latencyEl = document.getElementById('reqwest-latency');
+
+      if (method === 'STREAM' || url.includes('stream') || url.includes('chunks')) {
+        statusEl.textContent = 'Status: 206 Partial Content (Streaming chunks...)';
+        bodyEl.textContent = '// Opening reqwest::Response::bytes_stream() via futures_util...\n';
+        let chunk = 1;
+        const interval = setInterval(() => {
+          if (!document.getElementById('reqwest-body')) {
+            clearInterval(interval);
+            return;
+          }
+          const line = JSON.stringify({
+            chunk_id: chunk,
+            timestamp: new Date().toISOString(),
+            cpu_avg: telemetry.cpuHistory[telemetry.cpuHistory.length - 1],
+            ram_gb: telemetry.ramUsedGB
+          });
+          bodyEl.textContent += line + '\n';
+          bodyEl.scrollTop = bodyEl.scrollHeight;
+          chunk++;
+          if (chunk > 5) {
+            clearInterval(interval);
+            statusEl.textContent = 'Status: 200 OK (Stream Completed • 5 chunks)';
+            latencyEl.textContent = 'Duration: 610ms • tokio::spawn';
+          }
+        }, 140);
+      } else {
+        const ms = Math.floor(8 + Math.random() * 24);
+        statusEl.textContent = 'Status: 200 OK (application/json)';
+        latencyEl.textContent = `Latency: ${ms}ms • serde_json::to_string_pretty`;
+        const responseObj = {
+          endpoint: url,
+          method,
+          timestamp_chrono: new Date().toISOString(),
+          sysinfo_snapshot: {
+            cpu_cores: telemetry.cores,
+            memory_used_gb: telemetry.ramUsedGB,
+            uptime_seconds: telemetry.uptimeSeconds
+          },
+          dependencies_loaded: 12
+        };
+        bodyEl.textContent = JSON.stringify(responseObj, null, 2);
+      }
+    }
+
+    // --- APP 6: SCRATCHPAD (`serde` + `chrono`) ---
+    function renderNotesApp() {
+      return `
+        <div class="h-full flex flex-col gap-2.5">
+          <div class="flex items-center justify-between px-3 py-1.5 rounded-xl glass-inner text-[11px]">
+            <span class="font-medium">notes.md — Auto-saved in memory</span>
+            <span id="notes-saved-at" class="font-mono opacity-65">chrono::Local synced</span>
+          </div>
+          <textarea oninput="saveScratchpad(this.value)" class="flex-1 w-full p-4 rounded-2xl glass-inner font-mono text-xs leading-relaxed outline-none resize-none selectable">${scratchpadContent}</textarea>
+        </div>
+      `;
+    }
+
+    function saveScratchpad(val) {
+      scratchpadContent = val;
+      const el = document.getElementById('notes-saved-at');
+      if (el) el.textContent = `Saved ${new Date().toTimeString().split(' ')[0]}`;
+    }
+
+    // --- APP 7: GLASS SETTINGS ---
+    function renderSettingsApp() {
+      const currentBlur = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--glass-blur')) || 24;
+      return `
+        <div class="space-y-4">
+          <div class="p-4 rounded-2xl glass-inner space-y-3">
+            <div class="font-semibold text-sm">Frosted Glass Appearance</div>
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="font-medium">Surface Theme</div>
+                <div class="text-[11px] opacity-70">Toggle between Dark Obsidian Frost & Daylight Crystal</div>
+              </div>
+              <button onclick="toggleTheme(); document.getElementById('win-body-settings').innerHTML = renderSettingsApp();" class="px-3.5 py-2 rounded-xl bg-sky-500/35 hover:bg-sky-500/50 border border-sky-400/40 font-medium transition">
+                ${isLightGlass ? 'Switch to Dark Glass' : 'Switch to Light Glass'}
+              </button>
+            </div>
+
+            <div class="space-y-1.5 pt-2">
+              <div class="flex justify-between text-[11px]">
+                <span>Backdrop Blur Intensity</span>
+                <span id="settings-blur-val" class="font-mono">${currentBlur}px</span>
+              </div>
+              <input type="range" min="6" max="42" value="${currentBlur}" oninput="updateGlassBlur(this.value)" class="w-full" />
+            </div>
+          </div>
+
+          <div class="p-4 rounded-2xl glass-inner space-y-3">
+            <div class="font-semibold text-sm">Atmospheric Mesh Wallpapers</div>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <button onclick="setWallpaper('aurora')" class="group space-y-1.5 text-center">
+                <div class="h-16 rounded-2xl wallpaper-aurora border-2 ${currentWallpaper === 'aurora' ? 'border-sky-400' : 'border-white/25'} group-hover:scale-105 transition"></div>
+                <span class="text-[11px]">Aurora Mesh</span>
+              </button>
+              <button onclick="setWallpaper('glacier')" class="group space-y-1.5 text-center">
+                <div class="h-16 rounded-2xl wallpaper-glacier border-2 ${currentWallpaper === 'glacier' ? 'border-sky-400' : 'border-white/25'} group-hover:scale-105 transition"></div>
+                <span class="text-[11px]">Nordic Glacier</span>
+              </button>
+              <button onclick="setWallpaper('sunset')" class="group space-y-1.5 text-center">
+                <div class="h-16 rounded-2xl wallpaper-sunset border-2 ${currentWallpaper === 'sunset' ? 'border-sky-400' : 'border-white/25'} group-hover:scale-105 transition"></div>
+                <span class="text-[11px]">Solar Dusk</span>
+              </button>
+              <button onclick="setWallpaper('emerald')" class="group space-y-1.5 text-center">
+                <div class="h-16 rounded-2xl wallpaper-emerald border-2 ${currentWallpaper === 'emerald' ? 'border-sky-400' : 'border-white/25'} group-hover:scale-105 transition"></div>
+                <span class="text-[11px]">Emerald Matrix</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function updateGlassBlur(px) {
+      document.documentElement.style.setProperty('--glass-blur', `${px}px`);
+      const label = document.getElementById('settings-blur-val');
+      if (label) label.textContent = `${px}px`;
+    }
+
+    // =========================================================================
+    // 5. TOP BAR MENUS, CONTEXT MENU & ENVIRONMENT CONTROLS
+    // =========================================================================
+    function toggleMenu(id) {
+      const target = document.getElementById(id);
+      const isHidden = target.classList.contains('hidden');
+      closeMenus();
+      if (isHidden) target.classList.remove('hidden');
+    }
+
+    function closeMenus() {
+      ['system-menu', 'control-center', 'calendar-popover'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
+      });
+    }
+
+    document.addEventListener('click', e => {
+      if (!e.target.closest('header')) closeMenus();
+      if (!e.target.closest('#context-menu')) hideContextMenu();
+    });
+
+    function toggleControl(type) {
+      if (type === 'wifi') {
+        const status = document.getElementById('cc-wifi-status');
+        const active = status.textContent !== 'Off';
+        status.textContent = active ? 'Off' : 'AIM-Fiber-6E';
+        showToast('Network Interface', active ? 'Wi-Fi disabled' : 'Connected to AIM-Fiber-6E');
+      } else if (type === 'bt') {
+        const status = document.getElementById('cc-bt-status');
+        const active = status.textContent !== 'Off';
+        status.textContent = active ? 'Off' : 'Active';
+      }
+    }
+
+    function toggleTheme() {
+      isLightGlass = !isLightGlass;
+      document.body.classList.toggle('light-glass', isLightGlass);
+      const label = document.getElementById('theme-mode-label');
+      if (label) label.textContent = isLightGlass ? 'Daylight Crystal Frost' : 'Dark Obsidian Frost';
+    }
+
+    function setBrightness(val) {
+      document.getElementById('brightness-val').textContent = `${val}%`;
+      const darkness = (100 - val) / 100 * 0.75;
+      document.getElementById('brightness-overlay').style.opacity = darkness;
+    }
+
+    function setWallpaper(name) {
+      currentWallpaper = name;
+      document.body.classList.remove('wallpaper-aurora', 'wallpaper-glacier', 'wallpaper-sunset', 'wallpaper-emerald');
+      document.body.classList.add(`wallpaper-${name}`);
+      const settingsBody = document.getElementById('win-body-settings');
+      if (settingsBody) settingsBody.innerHTML = renderSettingsApp();
+    }
+
+    function cycleWallpaper() {
+      const order = ['aurora', 'glacier', 'sunset', 'emerald'];
+      const next = order[(order.indexOf(currentWallpaper) + 1) % order.length];
+      setWallpaper(next);
+    }
+
+    function sleepSystem() {
+      const screen = document.getElementById('sleep-screen');
+      screen.classList.remove('hidden');
+      screen.classList.add('flex');
+    }
+
+    function wakeSystem() {
+      const screen = document.getElementById('sleep-screen');
+      screen.classList.add('hidden');
+      screen.classList.remove('flex');
+      showToast('Welcome Back', 'Tokio & Tauri runtime resumed.', 'sky');
+    }
+
+    function restartSystem() {
+      Object.keys(openWindows).forEach(closeWindow);
+      showToast('AIM OS Restarted', 'All Tauri windows reinitialized.', 'emerald');
+    }
+
+    function selectDesktopIcon(btn) {
+      document.querySelectorAll('.desktop-icon').forEach(el => el.classList.remove('bg-white/20'));
+      btn.classList.add('bg-white/20');
+    }
+
+    function showDesktopContextMenu(e) {
+      if (e.target.closest('.window-frame') || e.target.closest('#dock-bar')) return;
+      e.preventDefault();
+      const menu = document.getElementById('context-menu');
+      menu.style.left = `${Math.min(window.innerWidth - 230, e.clientX)}px`;
+      menu.style.top = `${Math.min(window.innerHeight - 210, e.clientY)}px`;
+      menu.classList.remove('hidden');
+    }
+
+    function hideContextMenu() {
+      document.getElementById('context-menu').classList.add('hidden');
+    }
+
+    function createNewDesktopFolder() {
+      const grid = document.getElementById('desktop-icons');
+      const count = grid.children.length + 1;
+      const folderName = `Workspace_${count}`;
+      const btn = document.createElement('button');
+      btn.className = 'desktop-icon group w-24 p-2.5 rounded-2xl hover:bg-white/15 transition flex flex-col items-center gap-1.5 text-center';
+      btn.ondblclick = () => openApp('explorer');
+      btn.onclick = () => selectDesktopIcon(btn);
+      btn.innerHTML = `
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-sky-300 to-indigo-500 flex items-center justify-center shadow-lg group-hover:scale-105 transition">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+        </div>
+        <span class="text-xs font-medium drop-shadow leading-tight">${folderName}</span>
+      `;
+      grid.appendChild(btn);
+
+      const nowStr = new Date().toTimeString().split(' ')[0];
+      notifyEvents.unshift({ time: nowStr, kind: 'Create(Folder)', path: `Desktop/${folderName}` });
+      showToast('Folder Created', `notify watcher registered Desktop/${folderName}`, 'sky');
+    }
+  </script>
+</body>
+</html>

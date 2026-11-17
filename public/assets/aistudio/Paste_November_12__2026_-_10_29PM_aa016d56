@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full select-none bg-black">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Quantum Organic Screen OS v10.5</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Three.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Orbitron:wght@400;600;800&family=Inter:wght@300;400;500;600&display=swap');
+
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
+            background-color: #020617; font-family: 'Inter', sans-serif; color: #f8fafc;
+            user-select: none; -webkit-user-select: none; touch-action: none;
+        }
+
+        .font-orbitron { font-family: 'Orbitron', sans-serif; }
+        .font-mono-code { font-family: 'Fira Code', monospace; }
+
+        .hardware-chassis {
+            width: 100vw; height: 100dvh;
+            border-radius: 0px; border: none; background: #020617; box-shadow: none;
+        }
+        @media (min-width: 640px) {
+            .hardware-chassis {
+                width: 480px; height: 920px; border-radius: 42px;
+                border: 3px solid rgba(16, 185, 129, 0.45);
+                box-shadow: 0 0 100px rgba(0, 0, 0, 0.99), 0 0 80px rgba(16, 185, 129, 0.25);
+            }
+        }
+
+        .glass-panel {
+            background: rgba(3, 15, 26, 0.92);
+            backdrop-filter: blur(22px);
+            -webkit-backdrop-filter: blur(22px);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .organic-pill {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.22) 0%, rgba(4, 47, 46, 0.65) 100%);
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(52, 211, 153, 0.55);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .organic-pill:active { transform: scale(0.95); }
+        .organic-pill.active-pill {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.42) 0%, rgba(6, 95, 70, 0.85) 100%);
+            border-color: rgba(110, 231, 183, 0.9);
+            box-shadow: 0 0 18px rgba(16, 185, 129, 0.4);
+        }
+
+        .custom-scroll::-webkit-scrollbar { width: 4px; height: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: rgba(52, 211, 153, 0.4); border-radius: 4px; }
+
+        @keyframes organicPulse {
+            0%, 100% { opacity: 0.4; transform: scale(1); }
+            50% { opacity: 0.85; transform: scale(1.03); }
+        }
+        .tissue-glow { animation: organicPulse 3.5s infinite ease-in-out; }
+    </style>
+</head>
+<body class="relative flex items-center justify-center w-full h-full bg-black">
+
+    <div id="os-chassis" class="relative hardware-chassis flex flex-col overflow-hidden z-10">
+        
+        <!-- Hardware Status Bar & Organic Telemetry -->
+        <div class="relative w-full px-5 pt-3.5 pb-2 flex items-center justify-between text-[11px] font-mono text-emerald-200/95 z-40 bg-black/90 border-b border-emerald-500/20">
+            <div class="flex items-center space-x-2">
+                <span id="os-clock" class="font-bold tracking-wider text-emerald-100">12:00</span>
+                <span class="px-1.5 py-0.5 rounded bg-emerald-950/90 border border-emerald-500/40 text-[9px] text-emerald-300">BIO-SCREEN v10.5</span>
+            </div>
+            <div class="flex items-center space-x-2.5 text-[10px]">
+                <span id="metabolic-temp" class="text-emerald-300">36.8°C</span>
+                <span id="atp-readout" class="text-amber-300">ATP: 98%</span>
+                <span id="fps-readout" class="text-emerald-400 font-bold">120 FPS</span>
+                <i data-lucide="activity" class="w-3.5 h-3.5 text-emerald-400 animate-pulse"></i>
+            </div>
+        </div>
+
+        <!-- Main Viewport Area -->
+        <div class="relative flex-1 w-full overflow-hidden flex flex-col justify-between">
+            
+            <!-- Module Switcher -->
+            <div class="relative w-full px-3 py-1.5 z-30 flex items-center justify-between bg-black/75 border-b border-emerald-500/20">
+                <div class="flex items-center space-x-1.5">
+                    <div class="w-5 h-5 rounded bg-emerald-500/20 border border-emerald-500/50 flex items-center justify-center text-emerald-300">
+                        <i data-lucide="heart" class="w-3 h-3 animate-pulse"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-orbitron text-[9px] font-bold text-emerald-100 tracking-wider leading-none">ORGANIC TISSUE</h1>
+                        <span class="text-[8px] font-mono text-emerald-400/90">PIXELBLOCK_0X01 ACTIVE</span>
+                    </div>
+                </div>
+                <div class="flex space-x-1 bg-black/90 p-1 rounded-xl border border-emerald-500/35 text-[9px]">
+                    <button onclick="switchTab('tissue')" id="tab-tissue-btn" class="px-2 py-1 rounded font-mono bg-emerald-500/30 text-emerald-100 border border-emerald-400 transition-all">TISSUE</button>
+                    <button onclick="switchTab('core')" id="tab-core-btn" class="px-2 py-1 rounded font-mono text-emerald-400/70 hover:text-emerald-200 transition-all">CORE</button>
+                    <button onclick="switchTab('synapse')" id="tab-synapse-btn" class="px-2 py-1 rounded font-mono text-emerald-400/70 hover:text-emerald-200 transition-all">SYNAPSE</button>
+                </div>
+            </div>
+
+            <!-- Workspace Viewport Stack -->
+            <div class="relative w-full flex-1 p-2.5 z-30 flex flex-col justify-end overflow-hidden">
+                
+                <!-- MODULE 1: ORGANIC TISSUE (Living 3D WebGL Surface + Bioluminescent Membrane Ripples) -->
+                <div id="view-tissue" class="glass-panel w-full h-full rounded-2xl p-2.5 flex flex-col space-y-2">
+                    <div class="flex items-center justify-between pb-1 border-b border-emerald-500/25">
+                        <div class="flex items-center space-x-1.5">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                            <span class="font-orbitron text-[10px] font-bold text-emerald-200">SYNTHETIC CELLULAR MEMBRANE & 3D TISSUE</span>
+                        </div>
+                        <span id="tissue-state-badge" class="text-[9px] font-mono text-emerald-300">HOME OSTASIS (100%)</span>
+                    </div>
+
+                    <!-- 3D WebGL Canvas + Organic Membrane Ripple Overlay -->
+                    <div id="canvas-wrapper" class="relative flex-1 w-full bg-black/95 rounded-xl border border-emerald-500/30 overflow-hidden flex items-center justify-center">
+                        <canvas id="simCanvas" class="absolute inset-0 w-full h-full block touch-none cursor-pointer"></canvas>
+                        <canvas id="membraneOverlayCanvas" class="absolute inset-0 w-full h-full block pointer-events-none"></canvas>
+                        
+                        <!-- Telemetry Overlay Badge -->
+                        <div class="absolute top-2.5 left-2.5 bg-black/75 border border-emerald-500/35 rounded-lg p-2 pointer-events-none backdrop-blur-md space-y-0.5">
+                            <div class="text-[8px] font-mono text-emerald-400">1-PX BLOCK: <span class="text-amber-300 font-bold">PixelBlock_0x01</span></div>
+                            <div class="text-[8px] font-mono text-emerald-300">MITOSIS RATE: <span id="tele-mitosis" class="text-emerald-200">1.0x STABLE</span></div>
+                            <div class="text-[8px] font-mono text-emerald-300">MEMBRANE TENSION: <span id="tele-tension" class="text-cyan-300">0.45 kPa</span></div>
+                            <div class="text-[8px] font-mono text-emerald-300">BLOOD FLOW: <span id="tele-flow" class="text-emerald-400">72 BPM</span></div>
+                        </div>
+
+                        <!-- Top-Right Cellular Matrix Toggle -->
+                        <button onclick="toggleCellularMatrix()" id="btn-matrix-toggle" class="absolute top-2.5 right-2.5 px-2 py-1 rounded-lg bg-emerald-950/85 border border-emerald-400/60 text-[8px] font-mono text-emerald-200 backdrop-blur-md flex items-center space-x-1 active:scale-95 transition-transform">
+                            <i data-lucide="grid" class="w-3 h-3 text-emerald-400"></i>
+                            <span id="matrix-toggle-label">MATRIX: ON</span>
+                        </button>
+
+                        <!-- Bottom Touch Instruction -->
+                        <div class="absolute bottom-2 left-2.5 text-[8px] font-mono text-emerald-300/70 pointer-events-none bg-black/50 px-1.5 py-0.5 rounded">
+                            DRAG / TAP TISSUE: STIMULATE MEMBRANE RIPPLE & MITOSIS
+                        </div>
+                    </div>
+
+                    <!-- Organic Energy Circulation Bar -->
+                    <div class="grid grid-cols-3 gap-1.5 bg-black/70 border border-emerald-500/20 rounded-xl p-1.5 text-[8px] font-mono">
+                        <div>
+                            <div class="text-emerald-400">ATP METABOLISM</div>
+                            <div id="metric-atp" class="text-emerald-300 font-bold text-[10px]">14.8 µmol/s</div>
+                        </div>
+                        <div>
+                            <div class="text-emerald-400">BIOLUMINESCENCE</div>
+                            <div id="metric-lum" class="text-cyan-300 font-bold text-[10px]">88.2 LUMEN</div>
+                        </div>
+                        <div>
+                            <div class="text-emerald-400">CELLULAR DENSITY</div>
+                            <div id="metric-density" class="text-amber-300 font-bold text-[10px]">1,024 NODES</div>
+                        </div>
+                    </div>
+
+                    <!-- Control Deck (Mitosis, Nutrient Surge, Bioluminescence Pulse, Reset) -->
+                    <div class="grid grid-cols-4 gap-1.5 pt-0.5">
+                        <button onclick="triggerMitosis()" class="organic-pill py-2 rounded-xl flex flex-col items-center justify-center text-[9px] font-mono text-emerald-200 font-bold border border-emerald-400/50">
+                            <i data-lucide="git-fork" class="w-3.5 h-3.5 text-emerald-400 mb-0.5"></i>
+                            <span>MITOSIS</span>
+                        </button>
+                        <button onclick="triggerNutrientSurge()" class="organic-pill py-2 rounded-xl flex flex-col items-center justify-center text-[9px] font-mono text-amber-200">
+                            <i data-lucide="zap" class="w-3.5 h-3.5 text-amber-400 mb-0.5"></i>
+                            <span>SURGE</span>
+                        </button>
+                        <button onclick="pulseBioluminescence()" class="organic-pill py-2 rounded-xl flex flex-col items-center justify-center text-[9px] font-mono text-cyan-200">
+                            <i data-lucide="sun" class="w-3.5 h-3.5 text-cyan-400 mb-0.5"></i>
+                            <span>PULSE</span>
+                        </button>
+                        <button onclick="resetTissue()" class="organic-pill py-2 rounded-xl flex flex-col items-center justify-center text-[9px] font-mono text-emerald-300">
+                            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 text-emerald-400 mb-0.5"></i>
+                            <span>RESET</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- MODULE 2: ORGANIC COMPUTE CORE (1-Pixel System Block Register Inspector) -->
+                <div id="view-core" class="glass-panel w-full h-full rounded-2xl p-3 hidden flex-col space-y-2.5 overflow-hidden">
+                    <div class="flex items-center justify-between pb-1.5 border-b border-emerald-500/25">
+                        <div class="flex items-center space-x-2">
+                            <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+                            <span class="font-orbitron text-[11px] font-bold text-emerald-200">PIXELBLOCK_0X01 COMPUTE CORE</span>
+                        </div>
+                        <span class="text-[9px] font-mono text-emerald-400">ORGANIC GPGPU</span>
+                    </div>
+
+                    <!-- Live Pixel Register Matrix -->
+                    <div class="bg-black/85 rounded-xl border border-emerald-500/30 p-2.5 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[9px] font-mono text-emerald-300 font-bold">METABOLIC STATE VECTOR (vec4 x 2)</span>
+                            <span class="text-[8px] font-mono text-amber-400">128-BIT BIO-REG</span>
+                        </div>
+                        <div class="grid grid-cols-4 gap-1.5 text-center font-mono text-[9px]">
+                            <div class="bg-emerald-950/60 border border-emerald-500/30 rounded p-1.5">
+                                <div class="text-[7px] text-emerald-400">R: ATP_FLUX</div>
+                                <div id="reg-r" class="text-amber-300 font-bold">0.980</div>
+                            </div>
+                            <div class="bg-emerald-950/60 border border-emerald-500/30 rounded p-1.5">
+                                <div class="text-[7px] text-emerald-400">G: TISSUE_MASS</div>
+                                <div id="reg-g" class="text-emerald-300 font-bold">1.000</div>
+                            </div>
+                            <div class="bg-emerald-950/60 border border-emerald-500/30 rounded p-1.5">
+                                <div class="text-[7px] text-emerald-400">B: RIPPLE_KINETIC</div>
+                                <div id="reg-b" class="text-cyan-300 font-bold">0.000</div>
+                            </div>
+                            <div class="bg-emerald-950/60 border border-emerald-500/30 rounded p-1.5">
+                                <div class="text-[7px] text-emerald-400">A: LUMEN_GLOW</div>
+                                <div id="reg-a" class="text-emerald-200 font-bold">0.850</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cellular Scale Selector -->
+                    <div class="space-y-1">
+                        <div class="text-[9px] font-mono text-emerald-300 flex justify-between">
+                            <span>SYNTHETIC TISSUE INSTANCE MATRIX</span>
+                            <span id="core-scale-label" class="text-amber-400 font-bold">1,024 CELLS (1-PX BLOCK)</span>
+                        </div>
+                        <div class="grid grid-cols-4 gap-1.5">
+                            <button onclick="setTissueScale(256)" id="scale-btn-256" class="organic-pill py-2 rounded-lg font-mono text-[10px] text-emerald-100">256 CELLS</button>
+                            <button onclick="setTissueScale(512)" id="scale-btn-512" class="organic-pill py-2 rounded-lg font-mono text-[10px] text-emerald-100">512 CELLS</button>
+                            <button onclick="setTissueScale(1024)" id="scale-btn-1024" class="organic-pill active-pill py-2 rounded-lg font-mono text-[10px] text-emerald-200 font-bold">1,024 CELLS</button>
+                            <button onclick="setTissueScale(4096)" id="scale-btn-4096" class="organic-pill py-2 rounded-lg font-mono text-[10px] text-emerald-100">4,096 CELLS</button>
+                        </div>
+                    </div>
+
+                    <!-- WGSL / GLSL Organic Compute Kernel Source -->
+                    <div class="flex-1 bg-black/90 rounded-xl border border-emerald-500/30 p-2.5 font-mono-code text-[9px] text-emerald-200/90 overflow-auto custom-scroll space-y-1">
+                        <div class="text-amber-400 font-bold">// PixelBlock_0x01 Organic Tissue Compute Kernel</div>
+                        <div class="text-emerald-400">struct OrganicPixelBlock {</div>
+                        <div class="pl-3 text-emerald-100">atpLevel: f32,       <span class="text-slate-400">// Metabolic energy flux</span></div>
+                        <div class="pl-3 text-emerald-100">membraneTension: f32,<span class="text-slate-400">// Fluid ripple propagation</span></div>
+                        <div class="pl-3 text-emerald-100">mitosisRate: f32,    <span class="text-slate-400">// Cellular division factor</span></div>
+                        <div class="pl-3 text-emerald-100">bioluminescence: f32,<span class="text-slate-400">// Membrane photon emission</span></div>
+                        <div class="text-emerald-400">};</div>
+                        <div class="pt-1 text-cyan-300">@compute @workgroup_size(16, 16, 1)</div>
+                        <div class="text-emerald-300">fn execute_organic_tissue(@builtin(global_invocation_id) id: vec3&lt;u32&gt;) {</div>
+                        <div class="pl-3 text-emerald-100">let tissueState = sample_cellular_membrane(id.xy);</div>
+                        <div class="pl-3 text-emerald-100">let membraneWave = sin(uTime * 3.0 + tissueState.tension);</div>
+                        <div class="pl-3 text-amber-300">emit_bioluminescent_photon(id.xy, tissueState.lumen * membraneWave);</div>
+                        <div class="text-emerald-300">}</div>
+                    </div>
+                </div>
+
+                <!-- MODULE 3: NEURAL SYNAPSE (Organism Telemetry & System Tree) -->
+                <div id="view-synapse" class="glass-panel w-full h-full rounded-2xl p-3 hidden flex-col space-y-2.5 overflow-hidden">
+                    <div class="flex items-center justify-between pb-1.5 border-b border-emerald-500/25">
+                        <div class="flex items-center space-x-2">
+                            <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+                            <span class="font-orbitron text-[11px] font-bold text-emerald-200">ORGANIC SYNAPSE & SYSTEM TREE</span>
+                        </div>
+                        <span class="text-[9px] font-mono text-amber-400">LIVE HOMEOSTASIS</span>
+                    </div>
+
+                    <!-- Organism Component Tree List -->
+                    <div id="component-tree-container" class="flex-1 bg-black/85 rounded-xl border border-emerald-500/30 p-3 font-mono text-[10px] text-emerald-200 overflow-auto space-y-2 custom-scroll">
+                        <div class="text-amber-400 font-bold pb-1 border-b border-amber-500/25">QuantumOrganicOrganism [TissueOS_v10.5]</div>
+                        <div class="pl-2.5 space-y-1.5 border-l border-amber-500/35 ml-1">
+                            <div>├── 🌱 CellularMembraneTissue (WebGL2 Shader)</div>
+                            <div class="pl-4 text-emerald-300/85 text-[9px]">│   ├── meshResolution: <span class="text-cyan-300">64x64 Living Vertices</span></div>
+                            <div class="pl-4 text-emerald-300/85 text-[9px]">│   └── surfaceTension: <span id="tree-tension" class="text-amber-300">0.45 kPa</span></div>
+
+                            <div>├── ⚡ PixelBlock_0x01 [Compute Core]</div>
+                            <div class="pl-4 text-emerald-300/85 text-[9px]">│   ├── activeCells: <span id="tree-cells" class="text-emerald-300">1,024 Nodes</span></div>
+                            <div class="pl-4 text-emerald-300/85 text-[9px]">│   └── atpCirculation: <span class="text-amber-300">98% Normal</span></div>
+
+                            <div class="pt-1 text-emerald-400 font-bold">└── 🧬 BiologicalSubsystems</div>
+                            <div class="pl-4 space-y-1.5 border-l border-emerald-500/30 ml-1">
+                                <div>├── 📂 BioluminescenceEngine</div>
+                                <div class="pl-4 text-emerald-300/80 text-[9px]">│   └── photonFlux: <span id="tree-lumen" class="text-cyan-300">88.2 lumens</span></div>
+                                
+                                <div>├── 📂 MitosisDivisionController</div>
+                                <div class="pl-4 text-emerald-300/80 text-[9px]">│   └── cellClusters: <span class="text-emerald-300">16 Active Colonies</span></div>
+
+                                <div>├── 📂 MetabolicPulseWaveform</div>
+                                <div class="pl-4 text-emerald-300/80 text-[9px]">│   └── frequency: <span class="text-amber-300">1.2 Hz (Heartbeat)</span></div>
+
+                                └── 📂 EnvironmentalAtmosphere</div>
+                                <div class="pl-4 text-emerald-300/80 text-[9px]">
+                                    └── status: <span id="tree-status" class="text-emerald-400">Stable Homeostasis</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Hardware Home Bar -->
+        <div class="w-full h-5 bg-black flex items-center justify-center pb-1 z-40">
+            <div class="w-28 h-1 rounded-full bg-emerald-500/40"></div>
+        </div>
+    </div>
+
+    <!-- Master Application Script -->
+    <script>
+        lucide.createIcons();
+
+        // Update Hardware Clock
+        setInterval(() => {
+            document.getElementById('os-clock').innerText = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }, 1000);
+
+        // =========================================================================
+        // 1. QUANTUM ORGANIC SCREEN OS v10.5 - LIVING TISSUE STATE
+        // =========================================================================
+        const simCanvas = document.getElementById('simCanvas');
+        const membraneCanvas = document.getElementById('membraneOverlayCanvas');
+        const membraneCtx = membraneCanvas.getContext('2d');
+
+        let scene, camera, renderer;
+        let tissueMesh;
+        let tissueUniforms;
+        let biolumeOrbs = [];
+        let cellularMatrixEnabled = true;
+
+        const organicOrganism = {
+            atpLevel: 98,
+            mitosisRate: 1.0,
+            membraneTension: 0.45,
+            bioluminescence: 88.2,
+            heartRate: 72,
+            tissueScale: 1024,
+            touchRippleX: 0.5,
+            touchRippleY: 0.5,
+            touchRippleTime: 0.0
+        };
+
+        // Real-Time Frame Telemetry
+        let lastFrameTime = performance.now();
+        let frameCount = 0;
+        let lastFpsUpdate = performance.now();
+        let currentFps = 120;
+
+        // =========================================================================
+        // 2. INITIALIZE 3D LIVING TISSUE & 1-PIXEL SYSTEM BLOCK
+        // =========================================================================
+        function initOrganicScreen() {
+            scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x020617, 0.025);
+
+            const wrapper = document.getElementById('canvas-wrapper');
+            const width = wrapper.clientWidth || 400;
+            const height = wrapper.clientHeight || 500;
+
+            camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+            camera.position.set(0, -18, 26);
+            camera.lookAt(0, 0, 0);
+
+            renderer = new THREE.WebGLRenderer({ canvas: simCanvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
+            renderer.setSize(width, height);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+            resizeMembraneCanvas(width, height);
+
+            // Create Living Tissue Surface (Plane with custom organic vertex displacement shader)
+            const tissueGeo = new THREE.PlaneGeometry(24, 24, 64, 64);
+            
+            tissueUniforms = {
+                uTime: { value: 0 },
+                uTouchPos: { value: new THREE.Vector2(0.5, 0.5) },
+                uTouchTime: { value: -10.0 },
+                uMitosis: { value: 1.0 },
+                uBiolume: { value: 0.88 }
+            };
+
+            const tissueMat = new THREE.ShaderMaterial({
+                uniforms: tissueUniforms,
+                wireframe: false,
+                transparent: true,
+                side: THREE.DoubleSide,
+                vertexShader: `
+                    uniform float uTime;
+                    uniform vec2 uTouchPos;
+                    uniform float uTouchTime;
+                    uniform float uMitosis;
+                    varying vec2 vUv;
+                    varying float vElevation;
+                    varying vec3 vNormal;
+
+                    void main() {
+                        vUv = uv;
+                        vNormal = normal;
+
+                        vec3 pos = position;
+
+                        // Organic biological wave displacement
+                        float wave1 = sin(pos.x * 0.4 + uTime * 1.8) * cos(pos.y * 0.4 + uTime * 1.5);
+                        float wave2 = sin(length(pos.xy) * 0.6 - uTime * 2.2);
+                        float elevation = (wave1 * 0.8 + wave2 * 0.6) * uMitosis;
+
+                        // Touch/drag ripple deformation
+                        float distToTouch = distance(uv, uTouchPos);
+                        float ripple = sin(distToTouch * 18.0 - (uTime - uTouchTime) * 8.0) * exp(-distToTouch * 4.0);
+                        if (uTime - uTouchTime < 3.0) {
+                            elevation += ripple * 2.2;
+                        }
+
+                        pos.z += elevation;
+                        vElevation = elevation;
+
+                        gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+                    }
+                `,
+                fragmentShader: `
+                    uniform float uTime;
+                    uniform float uBiolume;
+                    varying vec2 vUv;
+                    varying float vElevation;
+                    varying vec3 vNormal;
+
+                    void main() {
+                        // Bioluminescent synthetic cellular tissue coloring
+                        vec3 bioCyan = vec3(0.06, 0.95, 0.75);
+                        vec3 bioEmerald = vec3(0.05, 0.65, 0.42);
+                        vec3 bioDark = vec3(0.02, 0.08, 0.15);
+
+                        float mixFactor = smoothstep(-1.5, 1.5, vElevation);
+                        vec3 tissueColor = mix(bioDark, bioEmerald, mixFactor);
+                        tissueColor = mix(tissueColor, bioCyan, vElevation * 0.4 + 0.3);
+
+                        // Organic grid/cellular membrane borders
+                        vec2 grid = abs(fract(vUv * 16.0 - 0.5) - 0.5) / fwidth(vUv * 16.0);
+                        float line = min(grid.x, grid.y);
+                        float membraneCell = 1.0 - min(line, 1.0);
+
+                        vec3 finalColor = mix(tissueColor, bioCyan * 1.6, membraneCell * 0.45);
+                        float pulse = 0.85 + 0.15 * sin(uTime * 3.0 + vUv.x * 6.0);
+
+                        gl_FragColor = vec4(finalColor * pulse * uBiolume, 0.92);
+                    }
+                `
+            });
+
+            tissueMesh = new THREE.Mesh(tissueGeo, tissueMat);
+            scene.add(tissueMesh);
+
+            // Floating Bioluminescent Orbs (ATP Photon Particles)
+            const orbGeo = new THREE.SphereGeometry(0.18, 16, 16);
+            for (let i = 0; i < 32; i++) {
+                const orbMat = new THREE.MeshBasicMaterial({
+                    color: i % 2 === 0 ? 0x10b981 : 0x38bdf8,
+                    transparent: true,
+                    opacity: 0.75
+                });
+                const orb = new THREE.Mesh(orbGeo, orbMat);
+                orb.position.set(
+                    (Math.random() - 0.5) * 20,
+                    (Math.random() - 0.5) * 20,
+                    Math.random() * 3 + 1
+                );
+                scene.add(orb);
+                biolumeOrbs.push({
+                    mesh: orb,
+                    speedX: (Math.random() - 0.5) * 0.02,
+                    speedY: (Math.random() - 0.5) * 0.02,
+                    speedZ: Math.random() * 0.015
+                });
+            }
+
+            setupTissueInteractions();
+            window.addEventListener('resize', onViewportResize);
+        }
+
+        function resizeMembraneCanvas(width, height) {
+            const dpr = Math.min(window.devicePixelRatio, 2);
+            membraneCanvas.width = width * dpr;
+            membraneCanvas.height = height * dpr;
+            membraneCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+
+        function onViewportResize() {
+            const wrapper = document.getElementById('canvas-wrapper');
+            if (!wrapper || !renderer || !camera) return;
+            const width = wrapper.clientWidth;
+            const height = wrapper.clientHeight;
+            if (width === 0 || height === 0) return;
+
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+            renderer.setSize(width, height);
+            resizeMembraneCanvas(width, height);
+        }
+
+        // =========================================================================
+        // 3. BIOLUMINESCENT MEMBRANE RIPPLE OVERLAY (SCREEN-SPACE CANVAS)
+        // =========================================================================
+        function renderMembraneRippleOverlay(timeSec) {
+            const width = membraneCanvas.clientWidth;
+            const height = membraneCanvas.clientHeight;
+            membraneCtx.clearRect(0, 0, width, height);
+
+            if (!cellularMatrixEnabled || width === 0 || height === 0) return;
+
+            const cols = 12;
+            const rows = 16;
+            const cellW = width / cols;
+            const cellH = height / rows;
+
+            const touchPxX = organicOrganism.touchRippleX * width;
+            const touchPxY = (1.0 - organicOrganism.touchRippleY) * height;
+
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    const x = c * cellW;
+                    const y = r * cellH;
+                    const midX = x + cellW * 0.5;
+                    const midY = y + cellH * 0.5;
+
+                    const dist = Math.hypot(midX - touchPxX, midY - touchPxY);
+                    const touchAge = timeSec - organicOrganism.touchRippleTime;
+                    const waveIntensity = touchAge < 3.0 ? Math.max(0, 1.0 - dist / 220) * Math.sin(touchAge * 10 - dist * 0.05) : 0;
+
+                    const organicPulse = 0.35 + 0.25 * Math.sin(timeSec * 2.5 + c * 0.4 + r * 0.4);
+                    const alpha = Math.min(0.35, Math.abs(waveIntensity) * 0.8 + organicPulse * 0.2);
+
+                    // Draw organic cellular membrane node
+                    membraneCtx.fillStyle = waveIntensity > 0.1 ? `rgba(52, 211, 153, ${alpha * 1.5})` : `rgba(16, 185, 129, ${alpha * 0.6})`;
+                    membraneCtx.beginPath();
+                    membraneCtx.arc(midX, midY, 2.5 + Math.abs(waveIntensity) * 3.0, 0, Math.PI * 2);
+                    membraneCtx.fill();
+
+                    // Draw connecting micro-synapse threads
+                    if (c < cols - 1) {
+                        membraneCtx.strokeStyle = `rgba(16, 185, 129, ${alpha * 0.35})`;
+                        membraneCtx.lineWidth = 1;
+                        membraneCtx.beginPath();
+                        membraneCtx.moveTo(midX, midY);
+                        membraneCtx.lineTo(midX + cellW, midY);
+                        membraneCtx.stroke();
+                    }
+                }
+            }
+        }
+
+        // =========================================================================
+        // 4. INTERACTIVE TOUCH & DRAG STIMULATION
+        // =========================================================================
+        function setupTissueInteractions() {
+            const handleInteract = (clientX, clientY) => {
+                const rect = simCanvas.getBoundingClientRect();
+                const x = (clientX - rect.left) / rect.width;
+                const y = (clientY - rect.top) / rect.height;
+
+                organicOrganism.touchRippleX = x;
+                organicOrganism.touchRippleY = y;
+                organicOrganism.touchRippleTime = performance.now() * 0.001;
+                organicOrganism.membraneTension = 0.85;
+
+                if (tissueUniforms) {
+                    tissueUniforms.uTouchPos.value.set(x, y);
+                    tissueUniforms.uTouchPos.value.set(x, y);
+                    tissueUniforms.uTouchTime.value = organicOrganism.touchRippleTime;
+                }
+            };
+
+            simCanvas.addEventListener('mousedown', e => handleInteract(e.clientX, e.clientY));
+            simCanvas.addEventListener('mousemove', e => {
+                if (e.buttons === 1) handleInteract(e.clientX, e.clientY);
+            });
+            simCanvas.addEventListener('touchstart', e => {
+                if (e.touches.length > 0) handleInteract(e.touches[0].clientX, e.touches[0].clientY);
+            }, { passive: true });
+            simCanvas.addEventListener('touchmove', e => {
+                if (e.touches.length > 0) handleInteract(e.touches[0].clientX, e.touches[0].clientY);
+            }, { passive: true });
+        }
+
+        // =========================================================================
+        // 5. ORGANIC CONTROLS & FUNCTIONS
+        // =========================================================================
+        function triggerMitosis() {
+            organicOrganism.mitosisRate = organicOrganism.mitosisRate === 1.0 ? 1.65 : 1.0;
+            if (tissueUniforms) tissueUniforms.uMitosis.value = organicOrganism.mitosisRate;
+            document.getElementById('tissue-state-badge').innerText = organicOrganism.mitosisRate > 1.0 ? "MITOSIS SURGE (1.65x)" : "HOMEOSTASIS (100%)";
+            document.getElementById('tele-mitosis').innerText = `${organicOrganism.mitosisRate}x ACTIVE`;
+        }
+
+        function triggerNutrientSurge() {
+            organicOrganism.atpLevel = Math.min(100, organicOrganism.atpLevel + 15);
+            organicOrganism.membraneTension = 0.95;
+            document.getElementById('atp-readout').innerText = `ATP: ${Math.round(organicOrganism.atpLevel)}%`;
+            document.getElementById('metric-atp').innerText = `22.4 µmol/s`;
+        }
+
+        function pulseBioluminescence() {
+            organicOrganism.bioluminescence = organicOrganism.bioluminescence > 100 ? 88.2 : 125.0;
+            if (tissueUniforms) tissueUniforms.uBiolume.value = organicOrganism.bioluminescence / 88.2;
+            document.getElementById('metric-lum').innerText = `${organicOrganism.bioluminescence.toFixed(1)} LUMEN`;
+        }
+
+        function resetTissue() {
+            organicOrganism.mitosisRate = 1.0;
+            organicOrganism.membraneTension = 0.45;
+            organicOrganism.bioluminescence = 88.2;
+            organicOrganism.atpLevel = 98;
+            if (tissueUniforms) {
+                tissueUniforms.uMitosis.value = 1.0;
+                tissueUniforms.uBiolume.value = 1.0;
+            }
+            document.getElementById('tissue-state-badge').innerText = "HOMEOSTASIS (100%)";
+            document.getElementById('tele-mitosis').innerText = "1.0x STABLE";
+            document.getElementById('atp-readout').innerText = "ATP: 98%";
+        }
+
+        function toggleCellularMatrix() {
+            cellularMatrixEnabled = !cellularMatrixEnabled;
+            const label = document.getElementById('matrix-toggle-label');
+            const btn = document.getElementById('btn-matrix-toggle');
+            if (cellularMatrixEnabled) {
+                label.innerText = 'MATRIX: ON';
+                btn.classList.add('border-emerald-400/60', 'text-emerald-200');
+                btn.classList.remove('border-slate-600', 'text-slate-400');
+            } else {
+                label.innerText = 'MATRIX: OFF';
+                btn.classList.remove('border-emerald-400/60', 'text-emerald-200');
+                btn.classList.add('border-slate-600', 'text-slate-400');
+            }
+        }
+
+        function setTissueScale(scale) {
+            organicOrganism.tissueScale = scale;
+            document.getElementById('core-scale-label').innerText = `${scale.toLocaleString()} CELLS (1-PX BLOCK)`;
+            document.getElementById('tree-cells').innerText = `${scale.toLocaleString()} Nodes`;
+            document.getElementById('metric-density').innerText = `${scale.toLocaleString()} NODES`;
+
+            [256, 512, 1024, 4096].forEach(s => {
+                const btn = document.getElementById(`scale-btn-${s}`);
+                if (btn) {
+                    if (s === scale) {
+                        btn.classList.add('active-pill', 'text-emerald-200', 'font-bold');
+                    } else {
+                        btn.classList.remove('active-pill', 'text-emerald-200', 'font-bold');
+                    }
+                }
+            });
+        }
+
+        // =========================================================================
+        // 6. MASTER RENDER & ANIMATION LOOP
+        // =========================================================================
+        function animateOrganicScreen(now) {
+            requestAnimationFrame(animateOrganicScreen);
+
+            const timeSec = now * 0.001;
+            const dt = Math.min((now - lastFrameTime) * 0.001, 0.05);
+            lastFrameTime = now;
+
+            // Calculate real FPS telemetry
+            frameCount++;
+            if (now - lastFpsUpdate >= 500) {
+                currentFps = Math.min(120, Math.round((frameCount * 1000) / (now - lastFpsUpdate)));
+                document.getElementById('fps-readout').innerText = `${currentFps} FPS`;
+                frameCount = 0;
+                lastFpsUpdate = now;
+            }
+
+            // Decay membrane tension smoothly
+            if (organicOrganism.membraneTension > 0.45) {
+                organicOrganism.membraneTension -= dt * 0.1;
+            } else {
+                organicOrganism.membraneTension = 0.45;
+            }
+
+            // Update tissue shader time
+            if (tissueUniforms) {
+                tissueUniforms.uTime.value = timeSec;
+            }
+
+            // Animate bioluminescent ATP photon orbs
+            biolumeOrbs.forEach(orb => {
+                orb.mesh.position.x += orb.speedX;
+                orb.mesh.position.y += orb.speedY;
+                orb.mesh.position.z += Math.sin(timeSec + orb.mesh.position.x) * 0.005;
+
+                if (Math.abs(orb.mesh.position.x) > 12) orb.speedX *= -1;
+                if (Math.abs(orb.mesh.position.y) > 12) orb.speedY *= -1;
+            });
+
+            // Sync 1-Pixel Register HUD in CORE tab
+            document.getElementById('reg-r').innerText = (organicOrganism.atpLevel / 100).toFixed(3);
+            document.getElementById('reg-g').innerText = organicOrganism.mitosisRate.toFixed(3);
+            document.getElementById('reg-b').innerText = (organicOrganism.membraneTension - 0.45).toFixed(3);
+            document.getElementById('reg-a').innerText = (organicOrganism.bioluminescence / 100).toFixed(3);
+
+            // Sync Synapse Tree telemetry
+            document.getElementById('tree-tension').innerText = `${organicOrganism.membraneTension.toFixed(2)} kPa`;
+            document.getElementById('tree-lumen').innerText = `${organicOrganism.bioluminescence.toFixed(1)} lumens`;
+
+            // Render WebGL2 tissue + membrane canvas overlay
+            if (renderer && scene && camera) {
+                renderer.render(scene, camera);
+                renderMembraneRippleOverlay(timeSec);
+            }
+        }
+
+        // Tab Switching
+        function switchTab(tab) {
+            ['tissue', 'core', 'synapse'].forEach(t => {
+                const btn = document.getElementById(`tab-${t}-btn`);
+                const view = document.getElementById(`view-${t}`);
+                btn.className = t === tab
+                    ? 'px-2 py-1 rounded font-mono bg-emerald-500/30 text-emerald-100 border border-emerald-400 transition-all'
+                    : 'px-2 py-1 rounded font-mono text-emerald-400/70 hover:text-emerald-200 transition-all';
+                view.style.display = t === tab ? 'flex' : 'none';
+            });
+            if (tab === 'tissue') {
+                setTimeout(onViewportResize, 20);
+            }
+        }
+
+        window.onload = function () {
+            initOrganicScreen();
+            setTissueScale(1024);
+            requestAnimationFrame(animateOrganicScreen);
+        };
+    </script>
+</body>
+</html>

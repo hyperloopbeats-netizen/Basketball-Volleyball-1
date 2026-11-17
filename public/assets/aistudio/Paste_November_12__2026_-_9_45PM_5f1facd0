@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full select-none bg-black">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Dragonfly AGI Swarm - Hyper Awareness Matrix OS v5050</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@300;400;600&family=Orbitron:wght@400;600;800&family=Inter:wght@300;400;500;600&display=swap');
+
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
+            background-color: #000000; font-family: 'Inter', sans-serif; color: #f1f5f9;
+            user-select: none; -webkit-user-select: none; touch-action: none;
+        }
+
+        .font-orbitron { font-family: 'Orbitron', sans-serif; }
+        .font-cinzel { font-family: 'Cinzel', serif; }
+
+        /* Hardware Chassis Skeleton */
+        .hardware-chassis {
+            border-radius: 36px;
+            border: 3px solid rgba(56, 189, 248, 0.35);
+            box-shadow: 0 0 90px rgba(0, 0, 0, 0.99), 0 0 45px rgba(56, 189, 248, 0.25), inset 0 0 25px rgba(15, 23, 42, 0.9);
+            background: #030712;
+        }
+
+        .perspective-container {
+            perspective: 1500px;
+            transform-style: preserve-3d;
+        }
+
+        /* Master UI Membrane Panels */
+        .master-panel {
+            background: rgba(4, 12, 24, 0.86);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9), inset 0 1px 3px rgba(255, 255, 255, 0.3);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            filter: blur(6px) brightness(0.65);
+            opacity: 0.4;
+            pointer-events: none;
+            transform: scale(0.94) translateZ(-40px);
+        }
+
+        .master-panel.active-stimulus {
+            filter: blur(0px) brightness(1.15);
+            opacity: 1.0;
+            pointer-events: auto;
+            border-color: rgba(56, 189, 248, 0.9);
+            box-shadow: 0 0 45px rgba(56, 189, 248, 0.45), inset 0 1px 4px rgba(255, 255, 255, 0.6);
+            transform: scale(1.02) translateZ(25px);
+        }
+
+        /* Liquid Morphism Pill Buttons */
+        .liquid-pill {
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.25) 0%, rgba(14, 116, 144, 0.5) 100%);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(56, 189, 248, 0.6);
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.6), inset 0 1px 2px rgba(255, 255, 255, 0.5);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .liquid-pill:hover {
+            box-shadow: 0 0 30px rgba(56, 189, 248, 0.8), inset 0 1px 3px rgba(255, 255, 255, 0.7);
+            border-color: rgba(56, 189, 248, 1);
+        }
+        .liquid-pill:active { transform: scale(0.96); }
+
+        .gooey-container { filter: url('#gooey-filter'); }
+
+        /* Optical Vignette & Cinematic Widescreen Letterbox */
+        .vignette {
+            pointer-events: none;
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 50% 50%, transparent 22%, rgba(0, 0, 0, 0.97) 100%);
+            z-index: 35;
+        }
+
+        .letterbox {
+            position: absolute;
+            left: 0; right: 0; height: 32px;
+            background: #000000;
+            z-index: 45;
+            pointer-events: none;
+        }
+        .letterbox-top { top: 0; }
+        .letterbox-bottom { bottom: 0; }
+
+        .analog-scanlines {
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(56, 189, 248, 0.015) 50%, rgba(56, 189, 248, 0.015));
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 15;
+        }
+
+        .custom-scroll::-webkit-scrollbar { width: 3px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: rgba(56, 189, 248, 0.3); border-radius: 4px; }
+    </style>
+</head>
+<body class="relative flex items-center justify-center w-full h-full bg-black p-0 sm:p-3">
+
+    <!-- SVG Gooey Filter Definition -->
+    <svg class="absolute w-0 h-0 overflow-hidden" aria-hidden="true">
+        <filter id="gooey-filter">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur" />
+            <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 1 19 -9" result="goo" />
+            <feComposite in="SourceGraphic" in2="goo" operator="atop" />
+        </filter>
+    </svg>
+
+    <!-- Secure Hardware Chassis Skeleton Container -->
+    <div id="os-chassis" class="relative w-full h-full sm:w-[420px] sm:h-[860px] hardware-chassis flex flex-col overflow-hidden z-10">
+        
+        <!-- Cinematic Widescreen Letterboxes & Optical Vignette -->
+        <div class="letterbox letterbox-top"></div>
+        <div class="letterbox letterbox-bottom"></div>
+        <div class="vignette"></div>
+
+        <!-- Hardware Camera Notch & Speaker -->
+        <div class="absolute top-8 left-1/2 -translate-x-1/2 w-32 h-4 bg-black/95 rounded-full z-50 border border-sky-500/25 flex items-center justify-center space-x-2 shadow-inner">
+            <div class="w-8 h-1 rounded-full bg-sky-500/30"></div>
+            <div class="w-1.5 h-1.5 rounded-full bg-sky-400/50 animate-pulse"></div>
+            <div class="w-1.5 h-1.5 rounded-full bg-emerald-400/80 animate-ping" title="Hunt Mode Active"></div>
+        </div>
+
+        <!-- System Hardware Status Bar -->
+        <div class="relative w-full px-6 pt-10 pb-2 flex items-center justify-between text-[11px] font-mono text-sky-200/90 z-40 bg-gradient-to-b from-black/90 to-transparent">
+            <span id="os-clock" class="font-bold tracking-wider">12:00</span>
+            <div class="flex items-center space-x-2 text-[10px]">
+                <span id="fps-readout" class="text-emerald-400">120 FPS LOCKED</span>
+                <i data-lucide="aperture" class="w-3.5 h-3.5 text-sky-400 animate-pulse"></i>
+            </div>
+        </div>
+
+        <!-- Viewport with WebGL Shaders & Touch-Gated Active Areas -->
+        <div id="viewport-canvas-container" class="relative flex-1 w-full overflow-hidden flex flex-col items-center justify-center perspective-container">
+            <!-- Master WebGL Fluid, Fractal & Toroidal Warp Canvas -->
+            <canvas id="glCanvas" class="absolute inset-0 w-full h-full block z-0 cursor-crosshair touch-none"></canvas>
+            <div class="analog-scanlines absolute inset-0"></div>
+
+            <!-- UI Master Panels -->
+            <div class="relative w-full h-full flex flex-col items-center justify-center z-30 space-y-4 p-4 pointer-events-none">
+                
+                <!-- Screen 0: Neural Core & Swarm Telemetry -->
+                <div id="screen-0" class="master-panel w-80 p-5 rounded-3xl space-y-3 active-stimulus pointer-events-auto" onmouseenter="activateMasterScreen(0)">
+                    <div class="flex items-center justify-between pb-2 border-b border-sky-500/30">
+                        <div class="flex items-center space-x-2">
+                            <i data-lucide="eye" class="w-4 h-4 text-sky-400"></i>
+                            <span class="font-orbitron text-xs font-bold text-sky-200">ODONATA-NET SWARM</span>
+                        </div>
+                        <span id="hunt-status-badge" class="text-[9px] font-mono text-emerald-400 animate-pulse">HUNT MODE ACTIVE</span>
+                    </div>
+                    <div class="space-y-1.5 font-mono text-[10px] text-sky-300">
+                        <div class="flex justify-between bg-black/40 p-2 rounded-lg border border-sky-500/20">
+                            <span>Fractal Fold Factor (n):</span> 
+                            <span id="stat-fractal" class="text-cyan-400">3.000</span>
+                        </div>
+                        <div class="flex justify-between bg-black/40 p-2 rounded-lg border border-sky-500/20">
+                            <span>Prey Lock Vectors:</span> 
+                            <span id="stat-prey" class="text-emerald-400">4 Tracked</span>
+                        </div>
+                    </div>
+                    <!-- Gooey Liquid Pill Action -->
+                    <div class="gooey-container pt-1 flex justify-center space-x-2">
+                        <button onclick="toggleHuntMode()" class="liquid-pill px-4 py-2 rounded-full flex items-center space-x-1.5 text-xs font-mono text-sky-100">
+                            <i data-lucide="crosshair" class="w-3.5 h-3.5 text-emerald-400"></i>
+                            <span id="hunt-btn-text">TOGGLE HUNT</span>
+                        </button>
+                        <button onclick="toggleMasterAudio()" class="liquid-pill px-4 py-2 rounded-full flex items-center space-x-1.5 text-xs font-mono text-sky-100">
+                            <i data-lucide="play" id="audio-icon" class="w-3.5 h-3.5 text-sky-400"></i>
+                            <span id="audio-label">DSP AUDIO</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Screen 1: Polyglot AST Deconstruction HUD -->
+                <div id="screen-1" class="master-panel w-80 p-5 rounded-3xl space-y-3 pointer-events-auto" onmouseenter="activateMasterScreen(1)">
+                    <div class="flex items-center justify-between pb-2 border-b border-sky-500/30">
+                        <div class="flex items-center space-x-2">
+                            <i data-lucide="cpu" class="w-4 h-4 text-cyan-400"></i>
+                            <span class="font-orbitron text-xs font-bold text-cyan-200">AST DECONSTRUCTION</span>
+                        </div>
+                        <div class="flex space-x-1">
+                            <button onclick="setLanguage('python')" class="px-1.5 py-0.5 text-[9px] font-mono bg-sky-900/60 border border-sky-500/40 rounded text-sky-200">PY</button>
+                            <button onclick="setLanguage('typescript')" class="px-1.5 py-0.5 text-[9px] font-mono bg-sky-900/60 border border-sky-500/40 rounded text-sky-200">TS</button>
+                            <button onclick="setLanguage('rust')" class="px-1.5 py-0.5 text-[9px] font-mono bg-sky-900/60 border border-sky-500/40 rounded text-sky-200">RS</button>
+                        </div>
+                    </div>
+                    <div class="bg-black/60 p-2.5 rounded-xl border border-sky-500/20 font-mono text-[10px] text-sky-300 max-h-24 overflow-y-auto custom-scroll">
+                        <pre id="ast-code-preview" class="whitespace-pre-wrap">def python_core_handler(config_matrix):
+    return config_matrix.validate()</pre>
+                    </div>
+                    <button onclick="extractCurrentModule()" class="w-full liquid-pill py-2 rounded-xl text-center text-[11px] font-mono text-cyan-200">
+                        CAPTURE & ISOLATE MODULE VECTOR
+                    </button>
+                </div>
+
+                <!-- Screen 2: Extracted Modules Matrix -->
+                <div id="screen-2" class="master-panel w-80 p-5 rounded-3xl space-y-2 pointer-events-auto" onmouseenter="activateMasterScreen(2)">
+                    <div class="flex items-center justify-between pb-1.5 border-b border-sky-500/30">
+                        <div class="flex items-center space-x-2">
+                            <i data-lucide="database" class="w-4 h-4 text-amber-400"></i>
+                            <span class="font-orbitron text-xs font-bold text-amber-200">MODULAR REPOSITORY</span>
+                        </div>
+                        <span id="module-count" class="text-[9px] font-mono text-amber-400">0 MODULES</span>
+                    </div>
+                    <div id="module-list" class="space-y-1.5 max-h-20 overflow-y-auto custom-scroll text-[10px] font-mono text-sky-300">
+                        <div class="text-slate-500 italic p-1">No captured modules in swarm memory yet. Use Hunt Mode or Capture.</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Hardware Home Bar -->
+        <div class="w-full h-4 bg-black flex items-center justify-center pb-1.5 z-40">
+            <div class="w-24 h-1 rounded-full bg-sky-500/30"></div>
+        </div>
+    </div>
+
+    <!-- Master WebGL Shaders with 3D Toroidal Warp & Fractal Mandelbulb Math -->
+    <script id="vertexShader" type="x-shader/x-vertex">
+        attribute vec2 a_position;
+        varying vec2 v_uv;
+        void main() {
+            v_uv = (a_position + 1.0) * 0.5;
+            gl_Position = vec4(a_position, 0.0, 1.0);
+        }
+    </script>
+    <script id="fragmentShader" type="x-shader/x-fragment">
+        precision highp float;
+        varying vec2 v_uv;
+        uniform vec2 u_resolution;
+        uniform float u_time;
+        uniform vec2 u_touch;
+        uniform float u_touchActive;
+        uniform float u_bassAmp;
+        uniform float u_trebleAmp;
+        uniform float u_turbulence;
+        uniform float u_qualityScale;
+        uniform float u_huntMode;
+
+        void main() {
+            vec2 st = (gl_FragCoord.xy - 0.5 * u_resolution.xy) / min(u_resolution.x, u_resolution.y);
+            vec2 touchNorm = (u_touch - 0.5 * u_resolution.xy) / min(u_resolution.x, u_resolution.y);
+
+            float dist = length(st - touchNorm);
+            
+            float zoom = 1.0 + u_huntMode * 0.4 + (u_bassAmp * 0.3);
+            vec2 scaledSt = st * zoom;
+
+            float r = length(scaledSt);
+            float theta = atan(scaledSt.y, scaledSt.x);
+            float warpZ = cos(r * 8.0 - u_time * 1.5) * sin(theta * 3.0 + u_time) * (0.15 + u_turbulence * 0.1);
+            vec2 warpedSt = scaledSt + vec2(cos(warpZ), sin(warpZ)) * 0.08;
+
+            vec2 z = warpedSt;
+            float n = 3.0;
+            float m = 0.0;
+            for(int i = 0; i < 4; i++) {
+                float r2 = dot(z, z);
+                if(r2 > 4.0) break;
+                float dr = pow(r2, n/2.0) * n + 1.0;
+                float thetaIt = atan(z.y, z.x) * n;
+                float zr = pow(r2, n/2.0);
+                z = zr * vec2(cos(thetaIt), sin(thetaIt)) + warpedSt;
+                m += sin(z.x * z.y + u_time);
+            }
+
+            vec2 hexCoord = warpedSt * (18.0 * u_qualityScale);
+            vec2 fHex = fract(hexCoord) - 0.5;
+            float hexDist = length(fHex);
+            float compoundEyeMask = smoothstep(0.42, 0.48, hexDist);
+
+            float voltageSpark = smoothstep(0.95, 1.0, abs(sin(warpedSt.x * 50.0 + u_time * 20.0))) * u_trebleAmp;
+            float huntReticle = smoothstep(0.02, 0.0, abs(dist - (0.2 + sin(u_time * 4.0) * 0.03))) * u_huntMode;
+
+            vec3 deepAbyss = vec3(0.002, 0.008, 0.025);
+            vec3 cinematicTeal = vec3(0.015, 0.22, 0.48);
+            vec3 cinematicOrange = vec3(0.95, 0.45, 0.1);
+
+            vec3 color = mix(deepAbyss, cinematicTeal, m * 0.25 + 0.5);
+            color = mix(color, cinematicOrange, voltageSpark * 0.9);
+            
+            color *= mix(0.75, 1.15, compoundEyeMask);
+            
+            color += vec3(0.1, 0.9, 0.4) * huntReticle * 1.5;
+            color += vec3(0.2, 0.8, 1.0) * smoothstep(0.35, 0.0, dist) * u_touchActive * (0.5 + u_bassAmp);
+
+            gl_FragColor = vec4(color, 1.0);
+        }
+    </script>
+
+    <script>
+        lucide.createIcons();
+
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('os-clock').innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }, 1000);
+
+        class FrameRateGovernor {
+            constructor(targetFPS = 120) {
+                this.targetFPS = targetFPS;
+                this.targetFrameTime = 1000 / targetFPS;
+                this.frameTimes = [];
+                this.sampleWindow = 30;
+                this.adaptiveQualityScale = 1.0;
+                this._lastTime = performance.now();
+            }
+            beginFrame(currentTime) { this._lastTime = currentTime; }
+            endFrame(currentTime) {
+                const dt = currentTime - this._lastTime;
+                this.frameTimes.push(dt);
+                if (this.frameTimes.length > this.sampleWindow) this.frameTimes.shift();
+                const avgFrameTime = this.frameTimes.reduce((a, b) => a + b, 0) / this.frameTimes.length;
+                if (avgFrameTime > this.targetFrameTime * 1.35) {
+                    this.adaptiveQualityScale = Math.max(0.5, this.adaptiveQualityScale - 0.03);
+                } else if (avgFrameTime < this.targetFrameTime * 1.05) {
+                    this.adaptiveQualityScale = Math.min(1.0, this.adaptiveQualityScale + 0.01);
+                }
+                return this.adaptiveQualityScale;
+            }
+        }
+        const fpsGovernor = new FrameRateGovernor(120);
+
+        const workerBlob = new Blob([`
+            const PI_PLUS_ONE = Math.PI + 1.0;
+            let aiConfig = { growth_turbulence: 0.618 };
+            let tickCount = 0;
+            setInterval(() => {
+                tickCount++;
+                const tf = tickCount * 0.05;
+                aiConfig.growth_turbulence = 0.618 + 0.25 * Math.sin(tf * PI_PLUS_ONE);
+                postMessage({ type: 'AI_STATE_UPDATE', config: aiConfig });
+            }, Math.floor(1000 * (PI_PLUS_ONE / 4)));
+        `], { type: 'application/javascript' });
+
+        const aiWorker = new Worker(URL.createObjectURL(workerBlob));
+        let workerTurbulence = 0.618;
+        aiWorker.onmessage = function(e) {
+            if (e.data.type === 'AI_STATE_UPDATE') {
+                workerTurbulence = e.data.config.growth_turbulence;
+            }
+        };
+
+        let huntModeActive = true;
+        function toggleHuntMode() {
+            huntModeActive = !huntModeActive;
+            const badge = document.getElementById('hunt-status-badge');
+            const btnText = document.getElementById('hunt-btn-text');
+            if (huntModeActive) {
+                badge.innerText = 'HUNT MODE ACTIVE';
+                badge.className = 'text-[9px] font-mono text-emerald-400 animate-pulse';
+                btnText.innerText = 'DISABLE HUNT';
+            } else {
+                badge.innerText = 'STANDBY CRUISE';
+                badge.className = 'text-[9px] font-mono text-sky-400';
+                btnText.innerText = 'ENABLE HUNT';
+            }
+        }
+
+        const codeSnippets = {
+            python: "def python_core_handler(config_matrix):\n    return config_matrix.validate()",
+            typescript: "class TypeScriptServiceConnector {\n    fetchTelemetry(): AxiosResponse {\n        return api.get();\n    }\n}",
+            rust: "struct TelemetryBufferPool {\n    buffer: Arc<Mutex<Vec<u8>>>\n}"
+        };
+
+        let currentLang = 'python';
+        function setLanguage(lang) {
+            currentLang = lang;
+            document.getElementById('ast-code-preview').innerText = codeSnippets[lang];
+        }
+
+        let capturedModules = [];
+        function extractCurrentModule() {
+            const modName = currentLang === 'python' ? 'PythonCoreHandler' : currentLang === 'typescript' ? 'TSConnector' : 'RustTelemetryPool';
+            capturedModules.push({ name: modName, lang: currentLang.toUpperCase() });
+            
+            document.getElementById('module-count').innerText = `${capturedModules.length} MODULES`;
+            const listEl = document.getElementById('module-list');
+            listEl.innerHTML = capturedModules.map(m => `
+                <div class="flex justify-between items-center bg-black/50 p-2 rounded-lg border border-amber-500/30">
+                    <span class="text-amber-200 font-bold">${m.name}</span>
+                    <span class="text-[9px] text-cyan-400">[${m.lang}] ISOLATED</span>
+                </div>
+            `).join('');
+        }
+
+        let audioCtx = null, analyser = null, freqData = null, isAudioRunning = false;
+        let bassVal = 0.0, trebleVal = 0.0;
+
+        function toggleMasterAudio() {
+            const btnLabel = document.getElementById('audio-label');
+            const icon = document.getElementById('audio-icon');
+
+            if (!isAudioRunning) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+                analyser = audioCtx.createAnalyser();
+                analyser.fftSize = 256;
+                freqData = new Uint8Array(analyser.frequencyBinCount);
+
+                [110.0, 164.81, 220.0, 329.63].forEach(freq => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+                    osc.connect(gain);
+                    gain.connect(analyser);
+                    osc.start();
+                });
+                analyser.connect(audioCtx.destination);
+                isAudioRunning = true;
+                btnLabel.innerText = 'PAUSE DSP';
+                icon.setAttribute('data-lucide', 'pause');
+            } else {
+                if (audioCtx) audioCtx.suspend();
+                isAudioRunning = false;
+                btnLabel.innerText = 'DSP AUDIO';
+                icon.setAttribute('data-lucide', 'play');
+            }
+            lucide.createIcons();
+        }
+
+        function activateMasterScreen(idx) {
+            document.querySelectorAll('.master-panel').forEach((el, i) => {
+                if (i === idx) el.classList.add('active-stimulus');
+                else el.classList.remove('active-stimulus');
+            });
+        }
+
+        const chassis = document.getElementById('os-chassis');
+        chassis.addEventListener('mousemove', (e) => {
+            document.querySelectorAll('.master-panel').forEach((screen, idx) => {
+                const rect = screen.getBoundingClientRect();
+                const cx = rect.left + rect.width / 2;
+                const cy = rect.top + rect.height / 2;
+                if (Math.hypot(e.clientX - cx, e.clientY - cy) < 140) activateMasterScreen(idx);
+            });
+        });
+
+        const canvas = document.getElementById('glCanvas');
+        const gl = canvas.getContext('webgl', { alpha: false });
+        const program = gl.createProgram();
+
+        function initShader(type, src) {
+            const s = gl.createShader(type);
+            gl.shaderSource(s, src);
+            gl.compileShader(s);
+            gl.attachShader(program, s);
+        }
+        initShader(gl.VERTEX_SHADER, document.getElementById('vertexShader').text);
+        initShader(gl.FRAGMENT_SHADER, document.getElementById('fragmentShader').text);
+        gl.linkProgram(program);
+        gl.useProgram(program);
+
+        const buf = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, -1,1, 1,-1, 1,1]), gl.STATIC_DRAW);
+        const posLoc = gl.getAttribLocation(program, 'a_position');
+        gl.enableVertexAttribArray(posLoc);
+        gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+
+        const uLocs = {
+            res: gl.getUniformLocation(program, 'u_resolution'),
+            time: gl.getUniformLocation(program, 'u_time'),
+            touch: gl.getUniformLocation(program, 'u_touch'),
+            touchActive: gl.getUniformLocation(program, 'u_touchActive'),
+            bassAmp: gl.getUniformLocation(program, 'u_bassAmp'),
+            trebleAmp: gl.getUniformLocation(program, 'u_trebleAmp'),
+            turbulence: gl.getUniformLocation(program, 'u_turbulence'),
+            qualityScale: gl.getUniformLocation(program, 'u_qualityScale'),
+            huntMode: gl.getUniformLocation(program, 'u_huntMode')
+        };
+
+        function resize() {
+            canvas.width = canvas.parentElement.clientWidth * window.devicePixelRatio;
+            canvas.height = canvas.parentElement.clientHeight * window.devicePixelRatio;
+            gl.viewport(0, 0, canvas.width, canvas.height);
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        let touchX = -1000, touchY = -1000, touchActiveVal = 0.0;
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            touchX = (e.clientX - rect.left) * window.devicePixelRatio;
+            touchY = (canvas.height - (e.clientY - rect.top) * window.devicePixelRatio);
+            touchActiveVal = 1.0;
+        });
+        canvas.addEventListener('mouseleave', () => { touchActiveVal = 0.0; });
+        canvas.addEventListener('touchmove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const touch = e.touches[0];
+            touchX = (touch.clientX - rect.left) * window.devicePixelRatio;
+            touchY = (canvas.height - (touch.clientY - rect.top) * window.devicePixelRatio);
+            touchActiveVal = 1.0;
+        }, { passive: true });
+        canvas.addEventListener('touchend', () => { touchActiveVal = 0.0; });
+
+        let startTime = performance.now();
+        function render(now) {
+            fpsGovernor.beginFrame(now);
+
+            if (isAudioRunning && analyser && freqData) {
+                analyser.getByteFrequencyData(freqData);
+                let bassSum = 0;
+                for (let i = 0; i < 15; i++) bassSum += freqData[i];
+                bassVal = (bassSum / 15) / 255.0;
+
+                let trebleSum = 0;
+                for (let i = 100; i < freqData.length; i++) trebleSum += freqData[i];
+                trebleVal = (trebleSum / (freqData.length - 100)) / 255.0;
+            } else {
+                bassVal = 0.0; trebleVal = 0.0;
+            }
+
+            gl.uniform2f(uLocs.res, canvas.width, canvas.height);
+            gl.uniform1f(uLocs.time, (now - startTime) * 0.001);
+            gl.uniform2f(uLocs.touch, touchX, touchY);
+            gl.uniform1f(uLocs.touchActive, touchActiveVal);
+            gl.uniform1f(uLocs.bassAmp, bassVal);
+            gl.uniform1f(uLocs.trebleAmp, trebleVal);
+            gl.uniform1f(uLocs.turbulence, workerTurbulence);
+            gl.uniform1f(uLocs.qualityScale, fpsGovernor.adaptiveQualityScale);
+            gl.uniform1f(uLocs.huntMode, huntModeActive ? 1.0 : 0.0);
+
+            gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+            const scale = fpsGovernor.endFrame(performance.now());
+            const fpsEl = document.getElementById('fps-readout');
+            if (scale < 0.8) {
+                fpsEl.innerText = 'THROTTLED';
+                fpsEl.className = 'text-amber-400';
+            } else {
+                fpsEl.innerText = '120 FPS LOCKED';
+                fpsEl.className = 'text-emerald-400';
+            }
+
+            requestAnimationFrame(render);
+        }
+        requestAnimationFrame(render);
+    </script>
+</body>
+</html>

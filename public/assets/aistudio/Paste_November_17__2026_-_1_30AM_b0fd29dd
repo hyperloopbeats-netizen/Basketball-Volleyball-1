@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full select-none bg-black">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>AIM-Cometic OS v30.0 — Ultimate Fused Workstation & Cognitive Suite</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Three.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- Three.js Postprocessing Addons -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Orbitron:wght@600;800&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+            orbitron: ['Orbitron', 'sans-serif'],
+            quicksand: ['Quicksand', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    :root {
+      --glass-blur: 24px;
+      --glass-bg: rgba(15, 23, 42, 0.88);
+      --glass-bg-elevated: rgba(15, 23, 42, 0.95);
+      --glass-border: rgba(244, 114, 182, 0.35);
+      --glass-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.7);
+      --text-primary: #f8fafc;
+      --panel-inner: rgba(2, 6, 23, 0.8);
+    }
+
+    * { box-sizing: border-box; user-select: none; }
+    input, textarea, pre, code, .selectable { user-select: text; }
+
+    body {
+      margin: 0; padding: 0; overflow: hidden; width: 100vw; height: 100vh;
+      font-family: 'Inter', sans-serif; color: var(--text-primary); background-color: #0b0f19;
+    }
+
+    #viewport-container {
+      position: absolute; inset: 0; z-index: 1; pointer-events: auto;
+    }
+
+    .glass-surface {
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--glass-shadow);
+    }
+    .glass-bar {
+      background: var(--glass-bg-elevated);
+      backdrop-filter: blur(28px) saturate(190%);
+      -webkit-backdrop-filter: blur(28px) saturate(190%);
+      border-bottom: 1px solid var(--glass-border);
+    }
+    .glass-inner { background: var(--panel-inner); border: 1px solid rgba(255, 255, 255, 0.12); }
+
+    .matrix-overlay, .app-modal {
+      position: absolute; inset: 44px 16px 75px 16px;
+      background: rgba(11, 15, 25, 0.94);
+      backdrop-filter: blur(36px);
+      -webkit-backdrop-filter: blur(36px);
+      z-index: 600;
+      display: none; flex-direction: column; padding: 16px; overflow: hidden;
+      border: 1px solid rgba(244, 114, 182, 0.5);
+      border-radius: 20px;
+    }
+
+    .step-card {
+      background: rgba(30, 41, 59, 0.85);
+      border: 1px solid rgba(244, 114, 182, 0.3);
+      transition: all 0.2s ease;
+    }
+    .step-card.unlocked {
+      border-color: rgba(244, 114, 182, 0.8);
+      background: rgba(83, 29, 61, 0.35);
+      box-shadow: 0 0 15px rgba(244, 114, 182, 0.25);
+    }
+    .step-card.active-step {
+      border-color: #38bdf8;
+      background: rgba(14, 116, 144, 0.4);
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+    }
+
+    .glass-dock {
+      background: var(--glass-bg-elevated);
+      backdrop-filter: blur(32px) saturate(195%);
+      -webkit-backdrop-filter: blur(32px) saturate(195%);
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    }
+
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(244, 114, 182, 0.4); border-radius: 9999px; }
+  </style>
+</head>
+<body class="flex flex-col h-screen overflow-hidden">
+
+  <!-- 3D Spatial WebGL2 / Cometic Engine Viewport Background -->
+  <div id="viewport-container">
+    <canvas id="simCanvas" class="w-full h-full block touch-none cursor-pointer"></canvas>
+  </div>
+
+  <!-- Micro-Fractal Top Status Bar -->
+  <header class="glass-bar h-8 px-4 flex items-center justify-between z-[1000] text-xs font-medium shrink-0 relative">
+    <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2">
+        <i data-lucide="sparkles" class="w-4 h-4 text-pink-400"></i>
+        <span class="font-bold font-orbitron tracking-wider text-[11px] text-pink-300">AIM-COMETIC OS v30.0 ULTIMATE</span>
+      </div>
+      <span class="opacity-30">|</span>
+      <div class="flex items-center gap-2 text-[11px] text-slate-300 font-mono">
+        <span class="w-2 h-2 rounded-full bg-pink-400 animate-pulse"></span>
+        <span id="system-status-text">Spatial Matrix & 22 Subsystems Nominal</span>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <div class="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-pink-500/20 border border-pink-400/30 text-[10px] text-pink-300 font-mono">
+        <span>OPFS: 29.6%</span>
+      </div>
+      <div class="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-[10px] text-emerald-300 font-mono">
+        <span id="top-fps">WebGL2: 60 FPS</span>
+      </div>
+      <button id="top-clock" class="px-2 py-0.5 rounded hover:bg-white/15 transition font-mono tabular-nums text-xs">12:47</button>
+    </div>
+  </header>
+
+  <!-- Main Multi-Window Workstation Workspace (Floats over 3D Engine) -->
+  <main id="workstation-grid" class="flex-1 p-3 grid grid-cols-1 lg:grid-cols-12 gap-3 overflow-hidden relative z-[500] pointer-events-none">
+    
+    <!-- Left Column: OPFS Scratch Disk & AetherFS Sync Logger (Col 4) -->
+    <div class="lg:col-span-4 flex flex-col gap-3 min-h-0 pointer-events-auto">
+      
+      <!-- Module 1: OPFS Scratch Disk Live Monitor -->
+      <div class="glass-surface rounded-2xl p-4 flex flex-col gap-3 shrink-0 shadow-xl border border-pink-500/30">
+        <div class="flex items-center justify-between border-b border-white/10 pb-2">
+          <div class="flex items-center gap-2">
+            <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-pink-400 to-purple-600 flex items-center justify-center shadow">
+              <i data-lucide="hard-drive" class="w-4 h-4 text-slate-950"></i>
+            </div>
+            <h3 class="font-bold font-orbitron text-xs text-pink-300">OPFS Scratch Disk Monitor</h3>
+          </div>
+          <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[10px] font-mono">Healthy</span>
+        </div>
+        <div class="space-y-2 font-mono text-xs">
+          <div class="flex justify-between text-slate-300">
+            <span>Quota Allocated:</span>
+            <span class="text-pink-400 font-bold">14.8 GB / 50.0 GB</span>
+          </div>
+          <div class="w-full h-2.5 rounded-full bg-slate-900 border border-white/10 overflow-hidden relative">
+            <div class="h-full bg-gradient-to-r from-pink-400 via-purple-500 to-cyan-400 transition-all duration-500" style="width: 29.6%"></div>
+          </div>
+          <div class="grid grid-cols-2 gap-2 pt-1">
+            <div class="p-2 rounded-xl glass-inner bg-slate-950/50">
+              <div class="text-[10px] text-slate-400">Inode Health</div>
+              <div class="text-sm font-bold text-emerald-300 font-orbitron mt-0.5">14,280 / 14k</div>
+            </div>
+            <div class="p-2 rounded-xl glass-inner bg-slate-950/50">
+              <div class="text-[10px] text-slate-400">I/O Throughput</div>
+              <div class="text-sm font-bold text-pink-300 font-orbitron mt-0.5">42.5 MB/s</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Module 5: AetherFS Sync Logger -->
+      <div class="glass-surface rounded-2xl p-4 flex flex-col flex-1 min-h-0 shadow-xl border border-pink-500/30">
+        <div class="flex items-center justify-between border-b border-white/10 pb-2 shrink-0">
+          <div class="flex items-center gap-2">
+            <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 to-pink-600 flex items-center justify-center shadow">
+              <i data-lucide="folder-git-2" class="w-4 h-4 text-white"></i>
+            </div>
+            <h3 class="font-bold font-orbitron text-xs text-indigo-300">AetherFS Sync Logger</h3>
+          </div>
+          <button onclick="WorkstationApp.clearLogs()" class="px-2 py-0.5 rounded bg-white/10 hover:bg-white/20 text-[10px] text-slate-300 cursor-pointer">Clear</button>
+        </div>
+        <div id="aetherfs-log-stream" class="flex-1 overflow-y-auto space-y-1.5 font-mono text-[11px] pt-2">
+          <div class="p-2 rounded bg-white/5 border border-white/5 space-y-0.5">
+            <div class="flex justify-between text-[9px] text-slate-400"><span>[SYNC]</span><span>12:47:01</span></div>
+            <p class="text-slate-200">Cometic spatial matrix journal checkpoint verified. Blake3 hash match.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Center Column: WebGL2 Compositor & Zero-Crossing CAD Kernel (Col 5) -->
+    <div class="lg:col-span-5 flex flex-col gap-3 min-h-0 pointer-events-auto">
+      
+      <!-- Module 2: WebGL2 Video Rendering Pipeline Compositor -->
+      <div class="glass-surface rounded-2xl p-4 flex flex-col gap-3 shrink-0 shadow-xl border border-pink-500/30">
+        <div class="flex items-center justify-between border-b border-white/10 pb-2">
+          <div class="flex items-center gap-2">
+            <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-rose-500 to-purple-600 flex items-center justify-center shadow">
+              <i data-lucide="clapperboard" class="w-4 h-4 text-white"></i>
+            </div>
+            <h3 class="font-bold font-orbitron text-xs text-rose-300">Cometic Shader & Bloom Compositor</h3>
+          </div>
+          <div class="flex items-center gap-2 font-mono text-[11px]">
+            <span class="text-pink-400 font-bold" id="compositor-status">Active</span>
+          </div>
+        </div>
+        <div class="relative w-full h-32 bg-slate-950/80 rounded-xl overflow-hidden border border-white/10 flex flex-col items-center justify-center p-3 text-center gap-2">
+          <p class="text-xs text-pink-200 font-quicksand">✨ Three.js Spatial Engine rendering live backdrop. Launch apps below or use Kawaii Matrix.</p>
+          <div class="flex items-center gap-2">
+            <button onclick="openVideoEditor()" class="px-3 py-1.5 rounded-lg bg-rose-500/30 hover:bg-rose-500/50 text-rose-200 text-xs font-mono font-bold border border-rose-400/50 cursor-pointer flex items-center gap-1.5">
+              <i data-lucide="video" class="w-3.5 h-3.5"></i> Launch Video Editor
+            </button>
+            <button onclick="openInternetBrowser()" class="px-3 py-1.5 rounded-lg bg-cyan-500/30 hover:bg-cyan-500/50 text-cyan-200 text-xs font-mono font-bold border border-cyan-400/50 cursor-pointer flex items-center gap-1.5">
+              <i data-lucide="globe" class="w-3.5 h-3.5"></i> Launch Browser
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Module 3: Zero-Crossing CAD Kernel Signed Distance Field Viewport -->
+      <div class="glass-surface rounded-2xl p-4 flex flex-col flex-1 min-h-0 shadow-xl border border-pink-500/30">
+        <div class="flex items-center justify-between border-b border-white/10 pb-2 shrink-0">
+          <div class="flex items-center gap-2">
+            <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-emerald-400 to-teal-700 flex items-center justify-center shadow">
+              <i data-lucide="box" class="w-4 h-4 text-white"></i>
+            </div>
+            <h3 class="font-bold font-orbitron text-xs text-emerald-300">Zero-Crossing CAD Kernel (SDF Viewport)</h3>
+          </div>
+          <div class="flex items-center gap-1.5 font-mono text-[10px]">
+            <button onclick="WorkstationApp.setCadShape('torus')" class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 cursor-pointer">Torus</button>
+            <button onclick="WorkstationApp.setCadShape('gyroid')" class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 cursor-pointer">Gyroid</button>
+          </div>
+        </div>
+        <div class="flex-1 relative w-full bg-slate-950/80 rounded-xl overflow-hidden border border-white/10 flex items-center justify-center mt-2 p-3 text-center">
+          <p class="text-xs text-emerald-300 font-mono" id="cad-status-label">PRIMITIVE: TORUS | SDF Raymarching Active (0.001mm)</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right Column: Interactive REPL Terminal & Stress Test Control Deck (Col 3) -->
+    <div class="lg:col-span-3 flex flex-col gap-3 min-h-0 pointer-events-auto">
+      
+      <!-- Module 4: Interactive REPL Terminal & Stress Test Deck -->
+      <div class="glass-surface rounded-2xl p-4 flex flex-col flex-1 min-h-0 shadow-xl border border-pink-500/30">
+        <div class="flex items-center justify-between border-b border-white/10 pb-2 shrink-0">
+          <div class="flex items-center gap-2">
+            <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow">
+              <i data-lucide="terminal" class="w-4 h-4 text-white"></i>
+            </div>
+            <h3 class="font-bold font-orbitron text-xs text-amber-300">Interactive REPL & Kawaii Deck</h3>
+          </div>
+          <button onclick="WorkstationApp.triggerStressTest()" class="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 font-bold font-mono text-[10px] cursor-pointer">Stress Test</button>
+        </div>
+        
+        <!-- Terminal Output Area -->
+        <div id="repl-terminal-output" class="flex-1 overflow-y-auto font-mono text-[11px] bg-slate-950/90 rounded-xl p-3 mt-2 border border-white/10 space-y-1.5 text-slate-300">
+          <div class="text-pink-400">AIM-Cometic OS v30.0 Kernel Initialized. Type 'help', 'editor', 'browser'.</div>
+          <div class="text-slate-500">$ sys.diagnostics --all</div>
+          <div class="text-emerald-400">-> OPFS: 50GB allocated (OK)<br>-> WebGL2 Three.js: 60 FPS (OK)<br>-> AGI Swarm Pets: Online (✨^▽^✨)</div>
+        </div>
+
+        <!-- Terminal Command Input -->
+        <div class="flex items-center gap-2 mt-2 shrink-0">
+          <span class="text-amber-400 font-mono text-xs">$</span>
+          <input type="text" id="repl-input" onkeydown="if(event.key==='Enter') WorkstationApp.handleReplCommand(this.value)" placeholder="Enter command ('editor', 'browser', 'help')..." class="flex-1 px-3 py-1.5 rounded-xl glass-inner bg-slate-950 text-xs text-slate-100 font-mono focus:outline-none">
+          <button onclick="WorkstationApp.handleReplCommand(document.getElementById('repl-input').value)" class="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold font-mono text-xs cursor-pointer">Exec</button>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- PROFESSIONAL VIDEO EDITOR APP MODAL -->
+  <div id="video-editor-modal" class="app-modal space-y-3 font-sans">
+    <div class="flex items-center justify-between pb-2 border-b border-rose-500/30">
+      <div class="flex items-center space-x-2">
+        <span class="w-3 h-3 rounded-full bg-rose-400 animate-pulse"></span>
+        <span class="font-orbitron text-xs font-bold text-rose-300 tracking-wider">COMETIC STUDIO PRO // NON-LINEAR VIDEO EDITOR</span>
+      </div>
+      <div class="flex items-center space-x-2">
+        <button onclick="videoEditor.exportProject()" class="bg-emerald-500/30 border border-emerald-400 text-emerald-200 px-3 py-1 rounded text-[10px] font-mono font-bold hover:bg-emerald-500/50 transition cursor-pointer flex items-center gap-1"><i data-lucide="download" class="w-3 h-3"></i> Export Video</button>
+        <button onclick="closeVideoEditor()" class="text-slate-400 hover:text-white px-2.5 py-1 rounded bg-slate-900 border border-slate-700 text-[10px] font-mono cursor-pointer">CLOSE [X]</button>
+      </div>
+    </div>
+
+    <!-- Editor Workspace: Preview + Inspector & Timeline -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 flex-1 min-h-0">
+      <!-- Preview Screen & Controls (Col 8) -->
+      <div class="lg:col-span-8 flex flex-col gap-3 min-h-0">
+        <div class="flex-1 bg-black/90 rounded-xl border border-rose-500/30 relative flex flex-col items-center justify-center overflow-hidden p-4">
+          <!-- Canvas for Video Preview Simulation -->
+          <div id="ve-preview-screen" class="w-full max-w-2xl aspect-video bg-gradient-to-br from-slate-900 via-rose-950/40 to-slate-950 rounded-lg border border-rose-400/40 relative flex items-center justify-center overflow-hidden shadow-2xl">
+            <!-- Simulated Active Visual Effect Layer -->
+            <div id="ve-visual-overlay" class="absolute inset-0 flex items-center justify-center pointer-events-none transition-all duration-300">
+              <h2 id="ve-title-text" class="font-orbitron font-bold text-xl text-pink-300 drop-shadow-[0_0_15px_rgba(244,114,182,0.8)]">AIM-COMETIC PRO MOVIE</h2>
+            </div>
+            <div class="absolute bottom-2 left-3 font-mono text-[10px] text-rose-300/80 bg-black/60 px-2 py-0.5 rounded">
+              Timecode: <span id="ve-timecode">00:00:00</span> / 00:00:15
+            </div>
+          </div>
+          <!-- Playback Controls -->
+          <div class="flex items-center gap-3 mt-3">
+            <button onclick="videoEditor.seekTo(0)" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-rose-300 cursor-pointer"><i data-lucide="skip-back" class="w-4 h-4"></i></button>
+            <button onclick="videoEditor.togglePlay()" id="ve-play-btn" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold font-mono text-xs cursor-pointer flex items-center gap-1.5 shadow-lg"><i data-lucide="play" class="w-4 h-4"></i> Play</button>
+            <button onclick="videoEditor.splitClip()" class="px-3 py-2 rounded-xl bg-purple-600/40 hover:bg-purple-600/60 text-purple-200 font-bold font-mono text-xs cursor-pointer border border-purple-400/40 flex items-center gap-1.5"><i data-lucide="scissors" class="w-4 h-4"></i> Split Clip</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Effects & Assets Panel (Col 4) -->
+      <div class="lg:col-span-4 bg-slate-900/90 rounded-xl border border-rose-500/30 p-3 flex flex-col gap-3 font-mono text-xs overflow-y-auto">
+        <div class="text-rose-300 font-bold pb-1 border-b border-rose-500/20 flex items-center gap-1.5"><i data-lucide="wand-2" class="w-4 h-4"></i> Video Effects & Filters</div>
+        <div class="space-y-2">
+          <label class="text-[10px] text-slate-400">Color Grade LUT</label>
+          <select id="ve-lut-select" onchange="videoEditor.applyEffect('lut', this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-xs text-rose-200">
+            <option value="cyberpunk">Cyberpunk Neon Pink</option>
+            <option value="matrix">Matrix Emerald Grid</option>
+            <option value="cinematic">Cinematic Teal & Orange</option>
+            <option value="monochrome">Noir Monochrome</option>
+          </select>
+        </div>
+        <div class="space-y-2">
+          <label class="text-[10px] text-slate-400">Overlay Title Text</label>
+          <input type="text" id="ve-title-input" value="AIM-COMETIC PRO MOVIE" oninput="videoEditor.updateTitle(this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-xs text-slate-100">
+        </div>
+        <div class="space-y-2 pt-2 border-t border-rose-500/20">
+          <div class="text-[10px] text-slate-400 font-bold">Media Bin & Assets</div>
+          <div class="grid grid-cols-2 gap-2">
+            <div onclick="videoEditor.addClip('Video A (4K 60FPS)', 'video', 5)" class="p-2 rounded-lg bg-slate-950 border border-rose-500/20 hover:border-rose-400 cursor-pointer text-center">
+              <i data-lucide="video" class="w-5 h-5 text-rose-400 mx-auto mb-1"></i>
+              <span class="text-[10px] text-slate-200">Sci-Fi Drone.mp4</span>
+            </div>
+            <div onclick="videoEditor.addClip('Audio Synth Wave', 'audio', 8)" class="p-2 rounded-lg bg-slate-950 border border-indigo-500/20 hover:border-indigo-400 cursor-pointer text-center">
+              <i data-lucide="music" class="w-5 h-5 text-indigo-400 mx-auto mb-1"></i>
+              <span class="text-[10px] text-slate-200">SynthWave.wav</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Timeline Multi-Track Area -->
+    <div class="h-44 bg-slate-950/95 rounded-xl border border-rose-500/30 p-3 flex flex-col gap-2 overflow-hidden shrink-0">
+      <div class="flex items-center justify-between text-[11px] font-mono pb-1 border-b border-white/10">
+        <span class="text-rose-300 font-bold">// TIMELINE TRACKS (Video 1 & Audio 1)</span>
+        <span class="text-slate-400">Duration: 15.0s</span>
+      </div>
+      <!-- Tracks Container -->
+      <div id="ve-timeline-tracks" class="flex-1 overflow-x-auto space-y-2 relative pt-2">
+        <!-- Playhead Indicator Line -->
+        <div id="ve-playhead" class="absolute top-0 bottom-0 w-0.5 bg-yellow-400 z-20 pointer-events-none transition-all" style="left: 0px;"></div>
+        
+        <!-- Video Track 1 -->
+        <div class="flex items-center gap-2">
+          <span class="w-16 text-[10px] font-mono text-slate-400 font-bold">V1 Video</span>
+          <div id="ve-track-video" class="flex-1 h-12 bg-slate-900 rounded-lg border border-rose-500/30 relative flex items-center px-2 gap-2 overflow-hidden">
+            <!-- Dynamic clips inserted here -->
+          </div>
+        </div>
+        <!-- Audio Track 1 -->
+        <div class="flex items-center gap-2">
+          <span class="w-16 text-[10px] font-mono text-slate-400 font-bold">A1 Audio</span>
+          <div id="ve-track-audio" class="flex-1 h-10 bg-slate-900 rounded-lg border border-indigo-500/30 relative flex items-center px-2 gap-2 overflow-hidden">
+            <!-- Dynamic waveform bars inserted here -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INTERACTIVE INTERNET BROWSER APP MODAL -->
+  <div id="browser-modal" class="app-modal space-y-3 font-sans">
+    <div class="flex items-center justify-between pb-2 border-b border-cyan-500/30">
+      <div class="flex items-center space-x-2">
+        <span class="w-3 h-3 rounded-full bg-cyan-400 animate-pulse"></span>
+        <span class="font-orbitron text-xs font-bold text-cyan-300 tracking-wider">AETHER-NET BROWSER // SECURE SANDBOX SUITE</span>
+      </div>
+      <div class="flex items-center space-x-2">
+        <button onclick="closeInternetBrowser()" class="text-slate-400 hover:text-white px-2.5 py-1 rounded bg-slate-900 border border-slate-700 text-[10px] font-mono cursor-pointer">CLOSE [X]</button>
+      </div>
+    </div>
+
+    <!-- Browser Tab Bar -->
+    <div id="browser-tabs-bar" class="flex items-center gap-2 overflow-x-auto pb-1 shrink-0">
+      <div class="flex items-center gap-2 px-3 py-1.5 rounded-t-xl bg-slate-900 border-t border-x border-cyan-500/40 text-cyan-300 font-mono text-xs cursor-pointer">
+        <i data-lucide="globe" class="w-3.5 h-3.5"></i>
+        <span>AIM Portal</span>
+        <i data-lucide="x" class="w-3 h-3 hover:text-white"></i>
+      </div>
+      <button onclick="internetBrowser.addNewTab()" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-300 font-mono text-xs cursor-pointer flex items-center gap-1"><i data-lucide="plus" class="w-3 h-3"></i> New Tab</button>
+    </div>
+
+    <!-- Browser Navigation Controls & URL Bar -->
+    <div class="flex items-center gap-2 bg-slate-900/90 p-2 rounded-xl border border-cyan-500/30 shrink-0">
+      <button onclick="internetBrowser.goBack()" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-300 cursor-pointer"><i data-lucide="arrow-left" class="w-4 h-4"></i></button>
+      <button onclick="internetBrowser.goForward()" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-300 cursor-pointer"><i data-lucide="arrow-right" class="w-4 h-4"></i></button>
+      <button onclick="internetBrowser.reload()" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-300 cursor-pointer"><i data-lucide="rotate-cw" class="w-4 h-4"></i></button>
+      
+      <!-- URL Input -->
+      <div class="flex-1 flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-700">
+        <i data-lucide="lock" class="w-3.5 h-3.5 text-emerald-400"></i>
+        <input type="text" id="browser-url-input" onkeydown="if(event.key==='Enter') internetBrowser.navigateTo(this.value)" value="https://wikipedia.org" class="flex-1 bg-transparent text-xs text-slate-100 font-mono focus:outline-none">
+      </div>
+
+      <button onclick="internetBrowser.navigateTo(document.getElementById('browser-url-input').value)" class="px-3 py-1.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-bold font-mono text-xs cursor-pointer">Go</button>
+    </div>
+
+    <!-- Quick Bookmarks Bar -->
+    <div class="flex items-center gap-2 text-[11px] font-mono shrink-0">
+      <span class="text-slate-400">Bookmarks:</span>
+      <button onclick="internetBrowser.navigateTo('https://wikipedia.org')" class="px-2 py-0.5 rounded bg-slate-800/80 hover:bg-slate-800 text-cyan-300 cursor-pointer">Wikipedia</button>
+      <button onclick="internetBrowser.navigateTo('https://news.ycombinator.com')" class="px-2 py-0.5 rounded bg-slate-800/80 hover:bg-slate-800 text-cyan-300 cursor-pointer">Hacker News</button>
+      <button onclick="internetBrowser.navigateTo('https://example.com')" class="px-2 py-0.5 rounded bg-slate-800/80 hover:bg-slate-800 text-cyan-300 cursor-pointer">Example Site</button>
+    </div>
+
+    <!-- Sandbox Viewport / Iframe Viewer -->
+    <div class="flex-1 bg-slate-950 rounded-xl border border-cyan-500/30 overflow-hidden relative">
+      <iframe id="browser-iframe" src="https://en.wikipedia.org/wiki/Main_Page" class="w-full h-full bg-white border-0"></iframe>
+    </div>
+  </div>
+
+  <!-- Cometic 10-Step Kawaii Matrix Overlay Modal -->
+  <div id="matrix-overlay" class="matrix-overlay custom-scroll space-y-3 font-quicksand">
+    <div class="flex items-center justify-between pb-2 border-b border-pink-500/30">
+      <div class="flex items-center space-x-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-pink-400 animate-ping"></span>
+        <span class="font-orbitron text-xs font-bold text-pink-200 tracking-wider">COMETIC ENGINE // 10-STEP KAWAI MATRIX</span>
+      </div>
+      <div class="flex items-center space-x-2">
+        <button onclick="cometicEngine.runFullEvolutionSequence()" class="bg-pink-500/30 border border-pink-400 text-pink-200 px-2.5 py-1 rounded text-[9px] font-bold hover:bg-pink-500/50 transition-all cursor-pointer">KAWAII OVERDRIVE [1-10]</button>
+        <button onclick="toggleMatrixOverlay(false)" class="text-slate-400 hover:text-white px-2 py-1 rounded bg-slate-900 border border-slate-700 text-[9px] font-mono cursor-pointer">CLOSE [X]</button>
+      </div>
+    </div>
+
+    <!-- 10-Step Interactive Kawaii Grid -->
+    <div class="grid grid-cols-5 gap-2 font-mono text-[9px]">
+      <div id="step-card-1" class="step-card p-2 rounded-xl space-y-1 cursor-pointer" onclick="cometicEngine.activateStep(1)">
+        <div class="text-pink-300 font-bold flex justify-between"><span>01. SOFT CTX</span><span id="s1-status">🔒</span></div>
+        <div class="text-[8px] text-slate-300 font-quicksand">Pastel WebGL2 Context Boot</div>
+      </div>
+      <div id="step-card-2" class="step-card p-2 rounded-xl space-y-1 cursor-pointer" onclick="cometicEngine.activateStep(2)">
+        <div class="text-pink-300 font-bold flex justify-between"><span>02. GEL SHADER</span><span id="s2-status">🔒</span></div>
+        <div class="text-[8px] text-slate-300 font-quicksand">Squishy Gel Vertex & Rim Glow</div>
+      </div>
+      <div id="step-card-3" class="step-card p-2 rounded-xl space-y-1 cursor-pointer" onclick="cometicEngine.activateStep(3)">
+        <div class="text-pink-300 font-bold flex justify-between"><span>03. GLOW BLOOM</span><span id="s3-status">🔒</span></div>
+        <div class="text-[8px] text-slate-300 font-quicksand">Dreamy Pastel Bloom Compositor</div>
+      </div>
+      <div id="step-card-4" class="step-card p-2 rounded-xl space-y-1 cursor-pointer" onclick="cometicEngine.activateStep(4)">
+        <div class="text-pink-300 font-bold flex justify-between"><span>04. SPARK MOTES</span><span id="s4-status">🔒</span></div>
+        <div class="text-[8px] text-slate-300 font-quicksand">Bouncing Cute Data-Spirit Particles</div>
+      </div>
+      <div id="step-card-5" class="step-card p-2 rounded-xl space-y-1 cursor-pointer" onclick="cometicEngine.activateStep(5)">
+        <div class="text-pink-300 font-bold flex justify-between"><span>05. CHIME AUDIO</span><span id="s5-status">🔒</span></div>
+        <div class="text-[8px] text-slate-300 font-quicksand">Harmonic Freq Pulse & Chimes</div>
+      </div>
+      <div id="step-card-6" class="step-card p-2 rounded-xl space-y-1 cursor-pointer" onclick="cometicEngine.activateStep(6)">
+        <div class="text-pink-300 font-bold flex justify-between"><span>06. PIXEL VOXELS</span><span id="s6-status">🔒</span></div>
+        <div class="text-[8px] text-slate-300 font-quicksand">Chibi Raymarched Hyper-Voxels</div>
+      </div>
+      <div id="step-card-7" class="step-card p-2 rounded-xl space-y-1 cursor-pointer" onclick="cometicEngine.activateStep(7)">
+        <div class="text-pink-300 font-bold flex justify-between"><span>07. HUG VORTEX</span><span id="s7-status">🔒</span></div>
+        <div class="text-[8px] text-slate-300 font-quicksand">Affectionate Gravity Singularity</div>
+      </div>
+      <div id="step-card-8" class="step-card p-2 rounded-xl space-y-1 cursor-pointer" onclick="cometicEngine.activateStep(8)">
+        <div class="text-pink-300 font-bold flex justify-between"><span>08. AGI PETS</span><span id="s8-status">🔒</span></div>
+        <div class="text-[8px] text-slate-300 font-quicksand">10,000 Autonomous Swarm Pets</div>
+      </div>
+      <div id="step-card-9" class="step-card p-2 rounded-xl space-y-1 cursor-pointer" onclick="cometicEngine.activateStep(9)">
+        <div class="text-pink-300 font-bold flex justify-between"><span>09. CLOUD GRID</span><span id="s9-status">🔒</span></div>
+        <div class="text-[8px] text-slate-300 font-quicksand">Marshmallow Horizon Wireframe Grid</div>
+      </div>
+      <div id="step-card-10" class="step-card p-2 rounded-xl space-y-1 cursor-pointer" onclick="cometicEngine.activateStep(10)">
+        <div class="text-pink-300 font-bold flex justify-between"><span>10. COMETIC CORE</span><span id="s10-status">🔒</span></div>
+        <div class="text-[8px] text-slate-300 font-quicksand">Full Ultimate Kawaii Kernel Synthesis</div>
+      </div>
+    </div>
+
+    <!-- Telemetry Inspector -->
+    <div class="grid grid-cols-2 gap-2 flex-1 min-h-[120px]">
+      <div class="bg-black/85 rounded-xl border border-pink-500/30 p-2.5 flex flex-col justify-between font-quicksand text-[10px]">
+        <div class="text-pink-400 font-bold mb-1">// KAWAII TELEMETRY INSPECTOR</div>
+        <div id="step-detail-view" class="text-slate-300 space-y-1">Select any upgrade step above to inspect parameters.</div>
+        <div class="mt-2 pt-2 border-t border-pink-500/20 flex items-center justify-between font-mono">
+          <span class="text-cyan-300">STAGE: <strong id="current-stage-label">Step 1</strong></span>
+          <button onclick="cometicEngine.triggerActiveStepAction()" class="bg-pink-500/30 border border-pink-400 text-pink-200 px-2 py-0.5 rounded text-[8px] font-bold hover:bg-pink-500/50 cursor-pointer">PAT DATA-SPIRIT</button>
+        </div>
+      </div>
+      <div class="bg-black/85 rounded-xl border border-pink-500/30 p-2.5 overflow-auto custom-scroll font-mono text-[9px] space-y-1">
+        <div class="text-pink-400 font-bold">// COMETIC ENGINE FEED</div>
+        <div id="matrix-log-feed" class="space-y-1 text-slate-300">
+          <div>[CometicCore]: Spatial 3D matrix online. (✨^▽^✨)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Floating Glass Dock -->
+  <nav aria-label="Application Dock" class="fixed bottom-2 left-1/2 -translate-x-1/2 z-[1500] max-w-[98vw]">
+    <div id="dock-bar" class="glass-dock px-3 py-2 rounded-2xl flex items-center gap-2 sm:gap-3 flex-wrap justify-center">
+      <span class="text-xs font-bold font-orbitron text-pink-300 px-1 hidden sm:inline">AIM-COMETIC SUITE</span>
+      <span class="opacity-30 hidden sm:inline">|</span>
+      <button onclick="openVideoEditor()" class="px-3 py-1.5 rounded-xl bg-rose-500/20 text-rose-300 hover:bg-rose-500/30 text-xs font-mono font-bold cursor-pointer flex items-center gap-1.5"><i data-lucide="video" class="w-3.5 h-3.5"></i> Video Editor</button>
+      <button onclick="openInternetBrowser()" class="px-3 py-1.5 rounded-xl bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/30 text-xs font-mono font-bold cursor-pointer flex items-center gap-1.5"><i data-lucide="globe" class="w-3.5 h-3.5"></i> Browser</button>
+      <button onclick="WorkstationApp.logEvent('OPFS', 'Manual snapshot triggered.')" class="px-3 py-1.5 rounded-xl bg-pink-500/20 text-pink-300 hover:bg-pink-500/30 text-xs font-mono font-bold cursor-pointer">💾 Snapshot OPFS</button>
+      <button onclick="toggleMatrixOverlay()" class="px-3 py-1.5 rounded-xl bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 text-xs font-mono font-bold cursor-pointer">✨ Kawaii Matrix</button>
+      <button onclick="cometicEngine.runFullEvolutionSequence()" class="px-3 py-1.5 rounded-xl bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/30 text-xs font-mono font-bold cursor-pointer">🚀 Overdrive</button>
+    </div>
+  </nav>
+
+  <!-- Fused Master Operating System Controller Script -->
+  <script>
+    lucide.createIcons();
+
+    // Clock ticker
+    setInterval(() => {
+      const clock = document.getElementById('top-clock');
+      if (clock) clock.textContent = new Date().toTimeString().split(' ')[0].substring(0, 5);
+    }, 1000);
+
+    // --- App Window Management ---
+    function openVideoEditor() {
+      document.getElementById('video-editor-modal').style.display = 'flex';
+      WorkstationApp.logEvent("APPS", "Launched Cometic Studio Pro Video Editor.");
+    }
+    function closeVideoEditor() {
+      document.getElementById('video-editor-modal').style.display = 'none';
+    }
+
+    function openInternetBrowser() {
+      document.getElementById('browser-modal').style.display = 'flex';
+      WorkstationApp.logEvent("APPS", "Launched Aether-Net Browser.");
+    }
+    function closeInternetBrowser() {
+      document.getElementById('browser-modal').style.display = 'none';
+    }
+
+    // --- Professional Video Editor Controller ---
+    class VideoEditor {
+      constructor() {
+        this.isPlaying = false;
+        this.currentTime = 0;
+        this.duration = 15.0;
+        this.timer = null;
+        this.clips = [
+          { id: 1, name: 'Sci-Fi Drone.mp4', type: 'video', duration: 8, start: 0 },
+          { id: 2, name: 'Cyber Transition.mp4', type: 'video', duration: 7, start: 8 }
+        ];
+        this.renderTimeline();
+      }
+
+      togglePlay() {
+        this.isPlaying = !this.isPlaying;
+        const btn = document.getElementById('ve-play-btn');
+        if (this.isPlaying) {
+          btn.innerHTML = `<i data-lucide="pause" class="w-4 h-4"></i> Pause`;
+          lucide.createIcons();
+          this.timer = setInterval(() => {
+            this.currentTime += 0.1;
+            if (this.currentTime >= this.duration) {
+              this.currentTime = 0;
+              this.isPlaying = false;
+              clearInterval(this.timer);
+              btn.innerHTML = `<i data-lucide="play" class="w-4 h-4"></i> Play`;
+              lucide.createIcons();
+            }
+            this.updatePlayheadUI();
+          }, 100);
+          WorkstationApp.logEvent("EDITOR", "Playback started.");
+        } else {
+          btn.innerHTML = `<i data-lucide="play" class="w-4 h-4"></i> Play`;
+          lucide.createIcons();
+          clearInterval(this.timer);
+          WorkstationApp.logEvent("EDITOR", "Playback paused.");
+        }
+      }
+
+      seekTo(time) {
+        this.currentTime = time;
+        this.updatePlayheadUI();
+      }
+
+      updatePlayheadUI() {
+        const pct = (this.currentTime / this.duration) * 100;
+        const playhead = document.getElementById('ve-playhead');
+        if (playhead) playhead.style.left = `${pct}%`;
+        const timecode = document.getElementById('ve-timecode');
+        if (timecode) {
+          const secs = Math.floor(this.currentTime);
+          const ms = Math.floor((this.currentTime - secs) * 100);
+          timecode.textContent = `00:00:${secs < 10 ? '0'+secs : secs}:${ms < 10 ? '0'+ms : ms}`;
+        }
+      }
+
+      splitClip() {
+        WorkstationApp.logEvent("EDITOR", `Split active clip at playhead position ${this.currentTime.toFixed(1)}s.`);
+        WorkstationApp.appendRepl(`Video Editor: Split clip at ${this.currentTime.toFixed(1)}s`, 'emerald');
+      }
+
+      applyEffect(type, val) {
+        const screen = document.getElementById('ve-preview-screen');
+        if (!screen) return;
+        if (val === 'cyberpunk') {
+          screen.className = "w-full max-w-2xl aspect-video bg-gradient-to-br from-slate-950 via-rose-950 to-purple-950 rounded-lg border border-pink-400 relative flex items-center justify-center overflow-hidden shadow-2xl";
+        } else if (val === 'matrix') {
+          screen.className = "w-full max-w-2xl aspect-video bg-gradient-to-br from-slate-950 via-emerald-950 to-slate-900 rounded-lg border border-emerald-400 relative flex items-center justify-center overflow-hidden shadow-2xl";
+        } else if (val === 'cinematic') {
+          screen.className = "w-full max-w-2xl aspect-video bg-gradient-to-br from-slate-950 via-cyan-950 to-blue-950 rounded-lg border border-cyan-400 relative flex items-center justify-center overflow-hidden shadow-2xl";
+        } else {
+          screen.className = "w-full max-w-2xl aspect-video bg-slate-950 rounded-lg border border-slate-700 relative flex items-center justify-center overflow-hidden shadow-2xl";
+        }
+        WorkstationApp.logEvent("EDITOR", `Applied color grade LUT: ${val}`);
+      }
+
+      updateTitle(txt) {
+        const titleEl = document.getElementById('ve-title-text');
+        if (titleEl) titleEl.textContent = txt || "AIM-COMETIC PRO MOVIE";
+      }
+
+      addClip(name, type, dur) {
+        this.clips.push({ id: Date.now(), name, type, duration: dur, start: this.duration });
+        this.duration += dur;
+        this.renderTimeline();
+        WorkstationApp.logEvent("EDITOR", `Added ${name} to timeline.`);
+      }
+
+      renderTimeline() {
+        const vTrack = document.getElementById('ve-track-video');
+        const aTrack = document.getElementById('ve-track-audio');
+        if (!vTrack || !aTrack) return;
+        
+        vTrack.innerHTML = '';
+        aTrack.innerHTML = '';
+
+        this.clips.forEach((clip, idx) => {
+          const widthPct = (clip.duration / this.duration) * 100;
+          if (clip.type === 'video') {
+            const el = document.createElement('div');
+            el.className = 'h-9 bg-rose-600/30 border border-rose-400/60 rounded px-2 flex items-center justify-between text-[10px] text-rose-200 font-mono overflow-hidden cursor-pointer';
+            el.style.width = `${widthPct}%`;
+            el.innerHTML = `<span>🎬 ${clip.name}</span><span class="opacity-60">${clip.duration}s</span>`;
+            vTrack.appendChild(el);
+          } else {
+            const el = document.createElement('div');
+            el.className = 'h-7 bg-indigo-600/30 border border-indigo-400/60 rounded px-2 flex items-center justify-between text-[10px] text-indigo-200 font-mono overflow-hidden cursor-pointer';
+            el.style.width = `${widthPct}%`;
+            el.innerHTML = `<span>🎵 ${clip.name}</span><span class="opacity-60">~||||~</span>`;
+            aTrack.appendChild(el);
+          }
+        });
+      }
+
+      exportProject() {
+        WorkstationApp.logEvent("EDITOR", "Rendering 4K H.265 Master via WebGL2 Hardware Encoder...");
+        WorkstationApp.appendRepl("Video Editor: Exporting master file to OPFS scratch disk...", "cyan");
+        setTimeout(() => {
+          WorkstationApp.logEvent("EDITOR", "Export completed successfully! Saved to /opfs/exports/Master_Render.mp4");
+          WorkstationApp.appendRepl("Video Editor: Export complete (/opfs/exports/Master_Render.mp4)", "emerald");
+        }, 1500);
+      }
+    }
+
+    let videoEditor;
+
+    // --- Interactive Internet Browser Controller ---
+    class InternetBrowser {
+      constructor() {
+        this.history = ['https://en.wikipedia.org/wiki/Main_Page'];
+        this.currentIndex = 0;
+      }
+
+      navigateTo(url) {
+        if (!url) return;
+        let finalUrl = url.trim();
+        if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
+          finalUrl = 'https://' + finalUrl;
+        }
+        document.getElementById('browser-url-input').value = finalUrl;
+        document.getElementById('browser-iframe').src = finalUrl;
+        this.history = this.history.slice(0, this.currentIndex + 1);
+        this.history.push(finalUrl);
+        this.currentIndex = this.history.length - 1;
+        WorkstationApp.logEvent("BROWSER", `Navigated to ${finalUrl}`);
+      }
+
+      goBack() {
+        if (this.currentIndex > 0) {
+          this.currentIndex--;
+          const url = this.history[this.currentIndex];
+          document.getElementById('browser-url-input').value = url;
+          document.getElementById('browser-iframe').src = url;
+          WorkstationApp.logEvent("BROWSER", `Navigated back to ${url}`);
+        }
+      }
+
+      goForward() {
+        if (this.currentIndex < this.history.length - 1) {
+          this.currentIndex++;
+          const url = this.history[this.currentIndex];
+          document.getElementById('browser-url-input').value = url;
+          document.getElementById('browser-iframe').src = url;
+          WorkstationApp.logEvent("BROWSER", `Navigated forward to ${url}`);
+        }
+      }
+
+      reload() {
+        const iframe = document.getElementById('browser-iframe');
+        iframe.src = iframe.src;
+        WorkstationApp.logEvent("BROWSER", "Reloaded active tab frame.");
+      }
+
+      addNewTab() {
+        this.navigateTo('https://wikipedia.org');
+        WorkstationApp.logEvent("BROWSER", "Opened new browser tab.");
+      }
+    }
+
+    let internetBrowser;
+
+
+    // --- Cometic Engine 3D Spatial Background Class ---
+    class CometicEngine {
+      constructor() {
+        this.scene = null;
+        this.camera = null;
+        this.renderer = null;
+        this.composer = null;
+        this.bloomPass = null;
+        this.gelShaderMat = null;
+        this.coreMesh = null;
+        this.particleSystem = null;
+        this.wireframeGrid = null;
+        
+        this.currentStep = 1;
+        this.unlockedSteps = { 1: true };
+        this.clock = new THREE.Clock();
+        
+        this.stepDetails = {
+          1: { title: "Soft Pastel WebGL2 Context", desc: "Boots hardware-accelerated context with warm twilight ambient lighting.", hook: () => {} },
+          2: { title: "Squishy Gel Matrix Shader", desc: "Compiles custom vertex shaders featuring organic gelatinous wobble.", hook: () => { if(this.coreMesh) { this.coreMesh.scale.set(1.15,1.15,1.15); setTimeout(()=>this.coreMesh.scale.set(1,1,1), 400); } } },
+          3: { title: "Dreamy Pastel Bloom Compositor", desc: "Applies high-pass UnrealBloom with a soft magenta tint.", hook: () => { if(this.bloomPass) { this.bloomPass.strength = 2.8; setTimeout(()=>this.bloomPass.strength=2.0, 900); } } },
+          4: { title: "Bouncing Cute Data-Spirits", desc: "Spawns 800+ bouncy data-motes orbiting the core.", hook: () => {} },
+          5: { title: "Harmonic Chime Freq Spectrum", desc: "Binds simulated audio frequencies to gentle scaling pulses.", hook: () => WorkstationApp.appendRepl("Audio harmonic frequencies pulsed.", "cyan") },
+          6: { title: "Chibi Raymarched Hyper-Voxels", desc: "Introduces rounded pillowy signed distance field geometry primitives.", hook: () => { if(this.coreMesh) this.coreMesh.rotation.y += 0.6; } },
+          7: { title: "Affectionate Gravity Singularity", desc: "Deforms space-time into a cozy gravitational vortex.", hook: () => { if(this.bloomPass) { this.bloomPass.radius = 0.95; setTimeout(()=>this.bloomPass.radius=0.6, 1100); } } },
+          8: { title: "10,000 Autonomous Swarm Pets", desc: "Deploys companion AGI pets that maintain cheerful boid formations.", hook: WorkstationApp.logEvent("AGI", "10,000 Autonomous Swarm Pets online! (◕‿◕✿)") },
+          9: { title: "Marshmallow Horizon Grid", desc: "Constructs an infinite glowing pastel wireframe floor.", hook: () => { if(this.wireframeGrid) this.wireframeGrid.material.opacity = 0.45; } },
+          10: { title: "Full Cometic Core Synthesis", desc: "Unlocks ultimate Kawaii Kernel: maximum bloom radiance.", hook: () => { if(this.bloomPass) this.bloomPass.strength = 3.5; } }
+        };
+      }
+
+      init() {
+        const container = document.getElementById('viewport-container');
+        const width = container.clientWidth;
+        const height = container.clientHeight;
+
+        this.scene = new THREE.Scene();
+        this.scene.fog = new THREE.FogExp2(0x0b0f19, 0.012);
+
+        this.camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 1000);
+        this.camera.position.set(0, 4, 26);
+        this.camera.lookAt(0, 0, 0);
+
+        const canvas = document.getElementById('simCanvas');
+        this.renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true, powerPreference: "high-performance" });
+        this.renderer.setSize(width, height);
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        this.renderer.toneMappingExposure = 1.3;
+
+        const renderScene = new THREE.RenderPass(this.scene, this.camera);
+        this.bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(width, height), 1.8, 0.5, 0.75);
+        this.bloomPass.threshold = 0.08;
+        this.bloomPass.strength = 2.0;
+        this.bloomPass.radius = 0.6;
+
+        this.composer = new THREE.EffectComposer(this.renderer);
+        this.composer.addPass(renderScene);
+        this.composer.addPass(this.bloomPass);
+
+        this.scene.add(new THREE.AmbientLight(0xffb6c1, 2.2));
+        const pointLight = new THREE.PointLight(0xf472b6, 6, 60);
+        pointLight.position.set(0, 10, 8);
+        this.scene.add(pointLight);
+
+        this.buildCometicGeometry();
+
+        window.addEventListener('resize', () => {
+          const w = container.clientWidth;
+          const h = container.clientHeight;
+          this.camera.aspect = w / h;
+          this.camera.updateProjectionMatrix();
+          this.renderer.setSize(w, h);
+          this.composer.setSize(w, h);
+        });
+      }
+
+      buildCometicGeometry() {
+        const vertexShader = `
+          uniform float uTime;
+          varying vec3 vNormal;
+          varying vec2 vUv;
+          void main() {
+            vNormal = normal;
+            vUv = uv;
+            vec3 pos = position;
+            float squish = sin(pos.x * 2.5 + uTime * 2.0) * cos(pos.y * 2.5 + uTime * 2.0) * 0.35;
+            pos += normal * squish;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+          }
+        `;
+        const fragmentShader = `
+          uniform float uTime;
+          varying vec3 vNormal;
+          varying vec2 vUv;
+          void main() {
+            vec3 pastelPink = vec3(0.95, 0.45, 0.70);
+            vec3 pastelCyan = vec3(0.22, 0.74, 0.96);
+            vec3 col = mix(pastelPink, pastelCyan, sin(vUv.x * 6.0 + uTime) * 0.5 + 0.5);
+            float rim = 1.0 - max(dot(vNormal, vec3(0, 0, 1)), 0.0);
+            col += vec3(1.0, 0.8, 0.9) * pow(rim, 2.5) * 1.8;
+            gl_FragColor = vec4(col, 0.92);
+          }
+        `;
+
+        this.gelShaderMat = new THREE.ShaderMaterial({
+          vertexShader, fragmentShader,
+          uniforms: { uTime: { value: 0.0 } },
+          transparent: true, side: THREE.DoubleSide
+        });
+
+        this.coreMesh = new THREE.Mesh(new THREE.IcosahedronGeometry(4.2, 3), this.gelShaderMat);
+        this.scene.add(this.coreMesh);
+
+        const pGeo = new THREE.BufferGeometry();
+        const pCount = 800;
+        const positions = new Float32Array(pCount * 3);
+        const velocities = new Float32Array(pCount * 3);
+        for (let i = 0; i < pCount * 3; i += 3) {
+          positions[i] = (Math.random() - 0.5) * 32;
+          positions[i+1] = (Math.random() - 0.5) * 22;
+          positions[i+2] = (Math.random() - 0.5) * 32;
+          velocities[i] = (Math.random() - 0.5) * 0.04;
+          velocities[i+1] = (Math.random() - 0.5) * 0.04 + 0.01;
+          velocities[i+2] = (Math.random() - 0.5) * 0.04;
+        }
+        pGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        this.particleSystem = new THREE.Points(pGeo, new THREE.PointsMaterial({ color: 0xffaecd, size: 0.22, transparent: true, blending: THREE.AdditiveBlending }));
+        this.particleSystem.userData = { velocities };
+        this.scene.add(this.particleSystem);
+
+        this.wireframeGrid = new THREE.Mesh(new THREE.PlaneGeometry(60, 60, 25, 25), new THREE.MeshBasicMaterial({ color: 0xf472b6, wireframe: true, transparent: true, opacity: 0.25 }));
+        this.wireframeGrid.rotation.x = Math.PI / 2;
+        this.wireframeGrid.position.y = -8;
+        this.scene.add(this.wireframeGrid);
+      }
+
+      activateStep(stepNum) {
+        if (stepNum > 10 || stepNum < 1) return;
+        this.currentStep = stepNum;
+        this.unlockedSteps[stepNum] = true;
+
+        for (let i = 1; i <= 10; i++) {
+          const card = document.getElementById(`step-card-${i}`);
+          const statusSpan = document.getElementById(`s${i}-status`);
+          if (card && statusSpan) {
+            if (this.unlockedSteps[i]) {
+              card.className = i === this.currentStep ? 'step-card active-step p-2 rounded-xl space-y-1 cursor-pointer' : 'step-card unlocked p-2 rounded-xl space-y-1 cursor-pointer';
+              statusSpan.innerText = '♥';
+            } else {
+              card.className = 'step-card p-2 rounded-xl space-y-1 cursor-pointer opacity-60';
+              statusSpan.innerText = '🔒';
+            }
+          }
+        }
+        const detail = this.stepDetails[stepNum];
+        document.getElementById('step-detail-view').innerHTML = `
+          <div class="text-pink-300 font-bold">STAGE ${stepNum}: ${detail.title}</div>
+          <div class="text-slate-300 mt-1">${detail.desc}</div>
+        `;
+        document.getElementById('current-stage-label').innerText = `Step ${stepNum}`;
+        WorkstationApp.logEvent("KAWAHI", `Activated Step ${stepNum}: ${detail.title}`);
+        detail.hook();
+      }
+
+      triggerActiveStepAction() {
+        if (this.stepDetails[this.currentStep]) {
+          this.stepDetails[this.currentStep].hook();
+          WorkstationApp.appendRepl(`Patted data-spirit at Stage ${this.currentStep}! (>^ω^<)`, "cyan");
+        }
+      }
+
+      runFullEvolutionSequence() {
+        let step = 1;
+        const interval = setInterval(() => {
+          this.activateStep(step);
+          step++;
+          if (step > 10) {
+            clearInterval(interval);
+            WorkstationApp.logEvent("OVERDRIVE", "10,000 AGI Swarm Pets cheering at maximum cuteness! (✨^▽^✨)");
+          }
+        }, 350);
+      }
+
+      update(delta, time) {
+        if (this.gelShaderMat) this.gelShaderMat.uniforms.uTime.value = time;
+        if (this.coreMesh) {
+          this.coreMesh.rotation.x = time * 0.15;
+          this.coreMesh.rotation.y = time * 0.25;
+        }
+        if (this.particleSystem) {
+          const pos = this.particleSystem.geometry.attributes.position.array;
+          const vel = this.particleSystem.userData.velocities;
+          for (let i = 0; i < pos.length; i += 3) {
+            pos[i] += vel[i]; pos[i+1] += vel[i+1]; pos[i+2] += vel[i+2];
+            if (Math.abs(pos[i]) > 22) vel[i] *= -1;
+            if (pos[i+1] > 15) pos[i+1] = -12;
+            if (pos[i+1] < -15) pos[i+1] = 12;
+            if (Math.abs(pos[i+2]) > 22) vel[i+2] *= -1;
+          }
+          this.particleSystem.geometry.attributes.position.needsUpdate = true;
+          this.particleSystem.rotation.y = time * 0.04;
+        }
+        if (this.composer) this.composer.render();
+      }
+    }
+
+    // --- AIM Workstation Controller ---
+    const WorkstationApp = {
+      cadShape: 'torus',
+
+      logEvent(source, msg) {
+        const time = new Date().toTimeString().split(' ')[0];
+        const stream = document.getElementById('aetherfs-log-stream');
+        if (!stream) return;
+        const entry = document.createElement('div');
+        entry.className = 'p-2 rounded bg-white/5 border border-white/5 space-y-0.5 animate-pulse';
+        entry.innerHTML = `
+          <div class="flex justify-between text-[9px] text-slate-400"><span>[${source}]</span><span>${time}</span></div>
+          <p class="text-slate-200">${msg}</p>
+        `;
+        stream.prepend(entry);
+        this.appendRepl(`[${source}] ${msg}`, 'cyan');
+      },
+
+      appendRepl(text, color = 'slate') {
+        const out = document.getElementById('repl-terminal-output');
+        if (!out) return;
+        const line = document.createElement('div');
+        line.className = color === 'cyan' ? 'text-cyan-400' : (color === 'emerald' ? 'text-emerald-400' : 'text-slate-300');
+        line.textContent = text;
+        out.appendChild(line);
+        out.scrollTop = out.scrollHeight;
+      },
+
+      handleReplCommand(cmd) {
+        if (!cmd) return;
+        this.appendRepl(`$ ${cmd}`);
+        document.getElementById('repl-input').value = '';
+        const lower = cmd.trim().toLowerCase();
+
+        if (lower === 'help') {
+          this.appendRepl("Commands: 'editor', 'browser', 'overdrive', 'matrix', 'clear', 'stress', 'status', 'hug'");
+        } else if (lower === 'editor') {
+          openVideoEditor();
+        } else if (lower === 'browser') {
+          openInternetBrowser();
+        } else if (lower === 'clear') {
+          document.getElementById('repl-terminal-output').innerHTML = '';
+        } else if (lower === 'stress') {
+          this.triggerStressTest();
+        } else if (lower === 'overdrive') {
+          cometicEngine.runFullEvolutionSequence();
+        } else if (lower === 'matrix') {
+          toggleMatrixOverlay(true);
+        } else if (lower === 'hug') {
+          this.logEvent("KAWAHI", "Cometic vortex gave all OS systems a warm digital hug! ♡(˃ɷ˂)");
+        } else {
+          this.appendRepl(`Command not recognized: '${cmd}'. Type 'help'.`);
+        }
+      },
+
+      triggerStressTest() {
+        this.appendRepl("Initiating OPFS & WebGL2 Three.js stress test...", 'cyan');
+        this.logEvent("STRESS", "Stress test engaged. Pushing 512MB blocks & parallel shaders.");
+        setTimeout(() => {
+          this.appendRepl("-> OPFS Peak: 198.4 MB/s (PASSED)", 'emerald');
+          this.appendRepl("-> Three.js Frame Drop: 0 frames (PASSED)", 'emerald');
+          this.logEvent("STRESS", "Stress test successfully completed.");
+        }, 1200);
+      },
+
+      setCadShape(shape) {
+        this.cadShape = shape;
+        document.getElementById('cad-status-label').innerText = `PRIMITIVE: ${shape.toUpperCase()} | SDF Raymarching Active (0.001mm)`;
+        this.logEvent("CAD", `Switched SDF primitive to: ${shape.toUpperCase()}`);
+      },
+
+      clearLogs() {
+        document.getElementById('aetherfs-log-stream').innerHTML = '';
+      }
+    };
+
+    let cometicEngine;
+
+    function toggleMatrixOverlay(forceState) {
+      const overlay = document.getElementById('matrix-overlay');
+      const isOpen = forceState !== undefined ? forceState : overlay.style.display !== 'flex';
+      overlay.style.display = isOpen ? 'flex' : 'none';
+    }
+
+    // Main Animation Loop
+    function animate() {
+      requestAnimationFrame(animate);
+      const delta = cometicEngine.clock.getDelta();
+      const time = cometicEngine.clock.getElapsedTime();
+
+      const fps = Math.round(1 / delta);
+      document.getElementById('top-fps').innerText = `WebGL2: ${Math.min(fps, 120)} FPS`;
+
+      cometicEngine.update(delta, time);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      cometicEngine = new CometicEngine();
+      cometicEngine.init();
+      cometicEngine.activateStep(1);
+      
+      videoEditor = new VideoEditor();
+      internetBrowser = new InternetBrowser();
+
+      requestAnimationFrame(animate);
+    });
+  </script>
+</body>
+</html>

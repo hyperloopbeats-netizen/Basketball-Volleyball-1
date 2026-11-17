@@ -1,0 +1,202 @@
+{
+  "timestamp": 1794907040876,
+  "version": "2.0.0-odonata",
+  "rallyId": 0,
+  "lastUpdated": "2026-11-17T09:12:55.632Z",
+  "tactics": {
+    "teamA_offense": "BALANCED",
+    "teamB_offense": "BALANCED",
+    "teamA_defense": "ZONAL_PERIMETER",
+    "teamB_defense": "ZONAL_PERIMETER",
+    "recommendedSetterPlay": "Balanced Transition Set",
+    "recommendedTargetZone": 4,
+    "tempo": "HIGH_SPEED",
+    "whistleActive": false,
+    "interceptPredictionAdjustment": {
+      "anticipationBoostMs": 67,
+      "liberoSafetyMargin": 0.475
+    }
+  },
+  "agiSwarmTelemetry": {
+    "workerTurbulence": 0.7186,
+    "fractalFoldN": 3.217,
+    "huntModeActive": true,
+    "preyLockCount": 4,
+    "fps": 15,
+    "adaptiveQualityScale": 0.7899999999999998
+  },
+  "playerPositioningMatrix": {
+    "teamA": [
+      {
+        "id": 1,
+        "role": "Outside",
+        "jersey": 12,
+        "xOffset": 0.2,
+        "zOffset": -0.15,
+        "targetZone": "ZONE_4_LEFT_FRONT",
+        "readiness": 82,
+        "tacticalRole": "NONE",
+        "reactionState": "SENSORY_STANDBY"
+      },
+      {
+        "id": 2,
+        "role": "Setter",
+        "jersey": 8,
+        "xOffset": 0.035,
+        "zOffset": -0.15,
+        "targetZone": "ZONE_3_MIDDLE_FRONT",
+        "readiness": 83,
+        "tacticalRole": "NONE",
+        "reactionState": "SENSORY_STANDBY"
+      },
+      {
+        "id": 3,
+        "role": "Opposite",
+        "jersey": 1,
+        "xOffset": -0.2,
+        "zOffset": -0.15,
+        "targetZone": "ZONE_2_RIGHT_FRONT",
+        "readiness": 84,
+        "tacticalRole": "NONE",
+        "reactionState": "SENSORY_STANDBY"
+      },
+      {
+        "id": 4,
+        "role": "LeftBack",
+        "jersey": 14,
+        "xOffset": 0.035,
+        "zOffset": -0.15,
+        "targetZone": "ZONE_5_LEFT_BACK",
+        "readiness": 87,
+        "tacticalRole": "NONE",
+        "reactionState": "SENSORY_STANDBY"
+      },
+      {
+        "id": 5,
+        "role": "Libero",
+        "jersey": 20,
+        "xOffset": 0.035,
+        "zOffset": -0.15,
+        "targetZone": "ZONE_6_MIDDLE_BACK",
+        "readiness": 90,
+        "tacticalRole": "NONE",
+        "reactionState": "SENSORY_STANDBY"
+      },
+      {
+        "id": 6,
+        "role": "Middle",
+        "jersey": 2,
+        "xOffset": -0.121,
+        "zOffset": -0.15,
+        "targetZone": "ZONE_1_RIGHT_BACK",
+        "readiness": 93,
+        "tacticalRole": "SERVER",
+        "reactionState": "SENSORY_STANDBY"
+      }
+    ],
+    "teamB": [
+      {
+        "id": 7,
+        "role": "Outside",
+        "jersey": 15,
+        "xOffset": -0.2,
+        "zOffset": -0.25,
+        "targetZone": "ZONE_4_LEFT_FRONT",
+        "readiness": 79,
+        "tacticalRole": "NONE",
+        "reactionState": "SENSORY_STANDBY"
+      },
+      {
+        "id": 8,
+        "role": "Setter",
+        "jersey": 6,
+        "xOffset": 0.035,
+        "zOffset": -0.25,
+        "targetZone": "ZONE_3_MIDDLE_FRONT",
+        "readiness": 79,
+        "tacticalRole": "NONE",
+        "reactionState": "SENSORY_STANDBY"
+      },
+      {
+        "id": 9,
+        "role": "Opposite",
+        "jersey": 16,
+        "xOffset": 0.2,
+        "zOffset": -0.25,
+        "targetZone": "ZONE_2_RIGHT_FRONT",
+        "readiness": 77,
+        "tacticalRole": "NONE",
+        "reactionState": "SENSORY_STANDBY"
+      },
+      {
+        "id": 10,
+        "role": "LeftBack",
+        "jersey": 5,
+        "xOffset": -0.206,
+        "zOffset": -0.25,
+        "targetZone": "ZONE_5_LEFT_BACK",
+        "readiness": 73,
+        "tacticalRole": "NONE",
+        "reactionState": "SENSORY_STANDBY"
+      },
+      {
+        "id": 11,
+        "role": "Libero",
+        "jersey": 7,
+        "xOffset": -0.035,
+        "zOffset": -0.25,
+        "targetZone": "ZONE_6_MIDDLE_BACK",
+        "readiness": 71,
+        "tacticalRole": "NONE",
+        "reactionState": "SENSORY_STANDBY"
+      },
+      {
+        "id": 12,
+        "role": "Middle",
+        "jersey": 19,
+        "xOffset": 0.136,
+        "zOffset": -0.25,
+        "targetZone": "ZONE_1_RIGHT_BACK",
+        "readiness": 71,
+        "tacticalRole": "NONE",
+        "reactionState": "SENSORY_STANDBY"
+      }
+    ]
+  },
+  "ballKinematicsAnalysis": {
+    "speedKmh": 0,
+    "apex": 0,
+    "interceptX": 0,
+    "interceptZ": 0,
+    "trajectoryPhase": "SERVE",
+    "recommendedSpikeAngle": 0,
+    "recommendedBlockDepth": 0.3
+  },
+  "geminiVoiceCommentary": {
+    "headline": "Coach: Spread the 3x3 arc — slip th",
+    "playAnalysis": "Tactical directive applied: Spread the 3x3 arc — slip the screen or attack the rim!",
+    "spokenQuote": "Coach orders: Spread the 3x3 arc — slip the screen or attack the rim!",
+    "coachingInsight": "Team adapting court coverage and hit tempo."
+  },
+  "coachPrompt": "Spread the 3x3 arc — slip the screen or attack the rim!",
+  "osOrchestration": {
+    "source": "DETERMINISTIC_KERNEL",
+    "timestamp": 1794907040876,
+    "osDirective": {
+      "healActions": [],
+      "targetStep": 5,
+      "bloomBoost": 0.12,
+      "adaptiveQualityHint": "STEP_UP",
+      "opfsCheckpoint": false,
+      "statusBanner": "Google Studio Orchestrating 3v3 Basketball"
+    },
+    "gameDirective": {
+      "playCall": "PICK_AND_ROLL",
+      "defenseCall": "SWITCH_EVERYTHING",
+      "focusJersey": 14,
+      "intensityBoost": 1,
+      "coachCallout": "Spread the 3x3 arc — slip the screen or attack the rim!",
+      "broadcastLine": "STUDIO AI: Cyan 4 - Vice Coral 2 · Clock 9.5s · Play PICK_AND_ROLL"
+    }
+  }
+}
